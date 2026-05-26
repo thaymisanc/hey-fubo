@@ -1,0 +1,1779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ask Fubo — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ---------- FT Regola Neue (Fubo brand font) ---------- */
+  @font-face {
+    font-family: 'FT Regola Neue';
+    src: url('./fonts/FTRegolaNeue-Light.otf') format('opentype');
+    font-weight: 300; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'FT Regola Neue';
+    src: url('./fonts/FTRegolaNeue-LightItalic.otf') format('opentype');
+    font-weight: 300; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'FT Regola Neue';
+    src: url('./fonts/FTRegolaNeue-Regular.otf') format('opentype');
+    font-weight: 400; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'FT Regola Neue';
+    src: url('./fonts/FTRegolaNeue-RegularItalic.otf') format('opentype');
+    font-weight: 400; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'FT Regola Neue';
+    src: url('./fonts/FTRegolaNeue-Medium.otf') format('opentype');
+    font-weight: 500; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'FT Regola Neue';
+    src: url('./fonts/FTRegolaNeue-MediumItalic.otf') format('opentype');
+    font-weight: 500; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'FT Regola Neue';
+    src: url('./fonts/FTRegolaNeue-Semibold.otf') format('opentype');
+    font-weight: 600; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'FT Regola Neue';
+    src: url('./fonts/FTRegolaNeue-SemiboldItalic.otf') format('opentype');
+    font-weight: 600; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'FT Regola Neue';
+    src: url('./fonts/FTRegolaNeue-Bold.otf') format('opentype');
+    font-weight: 700; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'FT Regola Neue';
+    src: url('./fonts/FTRegolaNeue-BoldItalic.otf') format('opentype');
+    font-weight: 700; font-style: italic; font-display: swap;
+  }
+  @font-face {
+    font-family: 'FT Regola Neue';
+    src: url('./fonts/FTRegolaNeue-Heavy.otf') format('opentype');
+    font-weight: 800; font-style: normal; font-display: swap;
+  }
+  @font-face {
+    font-family: 'FT Regola Neue';
+    src: url('./fonts/FTRegolaNeue-HeavyItalic.otf') format('opentype');
+    font-weight: 800; font-style: italic; font-display: swap;
+  }
+  /* 900 maps to Heavy for the few places that use it */
+  @font-face {
+    font-family: 'FT Regola Neue';
+    src: url('./fonts/FTRegolaNeue-Heavy.otf') format('opentype');
+    font-weight: 900; font-style: normal; font-display: swap;
+  }
+
+  /* ---------- Base ---------- */
+  *,*::before,*::after { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #06070A;
+    color: #fff;
+    font-family: 'FT Regola Neue', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+  button { font-family: inherit; cursor: pointer; }
+
+  /* ---------- Stage (fills viewport, 16:9 TV) ---------- */
+  .stage {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  /* ---------- Screens ---------- */
+  .screen {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 380ms ease;
+  }
+  .screen.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* =========================================================
+     HOME SCREEN
+     ========================================================= */
+  #home { background: #06070A; }
+
+  .home-sidebar {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 7vw;
+    min-width: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 72px 0 2.3vh;     /* align avatar with chip bar's 72px top offset */
+    z-index: 10;
+    background:
+      url('./img/navbar-gradient.png') left center / auto 100% no-repeat,
+      transparent;
+  }
+  .avatar {
+    width: 2.4vw; height: 2.4vw;
+    min-width: 32px; min-height: 32px;
+    max-width: 44px; max-height: 44px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+    overflow: hidden;
+  }
+  .avatar img { width: 100%; height: 100%; display: block; object-fit: cover; }
+  /* Nav-icon group fills remaining height and centers vertically */
+  .nav-icons {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2vh;
+    width: 100%;
+  }
+  .side-icon {
+    width: 3.4vw; height: 3.4vw;
+    min-width: 44px; min-height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    color: #A2A7C0;            /* inactive color from the supplied SVGs */
+    transition: all .2s ease;
+    cursor: pointer;
+  }
+  .side-icon svg {
+    width: 100%; height: 100%;
+    display: block;
+  }
+  .side-icon svg path { fill: currentColor; transition: fill .2s ease; }
+  .side-icon.active {
+    background: rgba(255,255,255,.12);
+    color: #fff;
+  }
+  .side-icon:hover { color: #fff; }
+
+  .home-content {
+    position: absolute;
+    left: 7vw;
+    top: 0; right: 0; bottom: 0;
+    /* Single shared left inset for chips, rail titles, and first cards */
+    padding: 72px 0 4vh 3vw;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+  }
+  .home-content::-webkit-scrollbar { display: none; }
+
+  /* Top chip bar */
+  .chip-bar {
+    display: flex;
+    align-items: center;
+    gap: 1.1vw;
+    padding-right: 2vw;          /* breathing room at end of chips */
+    margin-bottom: 64px;
+    /* No padding-left — home-content already provides the shared inset */
+  }
+  .chip {
+    height: 5.8vh;
+    min-height: 52px;
+    padding: 0 2.2vw;
+    border-radius: 16px;
+    background: #161822;
+    color: #fff;
+    font-size: clamp(14px, 1.4vw, 22px);
+    font-weight: 500;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    transition: transform .15s ease, background .2s ease;
+  }
+  .chip:hover { background: #1f2230; transform: scale(1.03); }
+  .chip.active {
+    background: #161822;
+    color: #fff;
+    /* No border or fill change — visually identical to other chips per spec */
+  }
+
+  .ask-fubo-chip {
+    position: relative;
+    padding: 0 1.8vw 0 1.6vw;
+    background: #000;
+    color: #fff;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 999px;   /* Ask Fubo stays the only pill-shaped chip */
+    z-index: 1;
+    overflow: visible;
+  }
+  .ask-fubo-chip:hover { background: #000; }
+  .ask-fubo-chip::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 999px;
+    padding: 2px;
+    background: linear-gradient(120deg,
+      #6366f1 0%, #a855f7 25%, #ec4899 50%, #f43f5e 75%, #a855f7 100%);
+    background-size: 220% 100%;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    animation: chip-gradient-drift 7s ease-in-out infinite;
+    z-index: -1;
+  }
+  .ask-fubo-chip::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 999px;
+    background: radial-gradient(closest-side, rgba(236,72,153,.20), transparent 75%);
+    filter: blur(10px);
+    z-index: -2;
+    opacity: .7;
+    pointer-events: none;
+  }
+  .ask-fubo-chip .sparkle {
+    width: 1.4vw; height: 1.4vw;
+    min-width: 18px; min-height: 18px;
+    margin-right: .6vw;
+    flex-shrink: 0;
+  }
+  @keyframes chip-gradient-drift {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+  .time-chip {
+    margin-left: auto;
+    background: #1c1c1c;
+    color: #fff;
+    height: 4vh; min-height: 36px;
+    padding: 0 1.2vw;
+    border-radius: 999px;
+    font-size: clamp(12px, 1.1vw, 16px);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Rails — home-content's padding-left is the ONLY left inset */
+  .rail { /* no padding */ }
+  .rail + .rail {
+    margin-top: 4.5vh;
+  }
+  .rail-title {
+    font-size: clamp(20px, 1.95vw, 32px);
+    font-weight: 700;
+    margin: 0 0 1.8vh 0;
+    color: #fff;
+    letter-spacing: -.01em;
+  }
+  .rail-row {
+    display: flex;
+    gap: 1.3vw;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 12px 2vw 1vh 0;
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  .rail-row::-webkit-scrollbar { display: none; }
+  .rail-row > .card { scroll-snap-align: start; }
+
+  .card {
+    flex: 0 0 auto;
+    width: 18.5vw;
+    min-width: 220px;
+    border-radius: 14px;
+    overflow: visible;
+    position: relative;
+    cursor: pointer;
+    transition: transform .2s ease;
+  }
+  .card:hover { transform: translateY(-3px) scale(1.02); }
+
+  .card-img {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #222;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-time {
+    position: absolute;
+    top: 8px; left: 8px;
+    background: rgba(28,28,28,.95);
+    color: #fff;
+    font-size: clamp(11px, .85vw, 14px);
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 999px;
+    z-index: 2;
+  }
+  .card-tag {
+    position: absolute;
+    top: 8px; left: 8px;
+    background: rgba(28,28,28,.85);
+    color: #cfcfcf;
+    font-size: clamp(9px, .7vw, 12px);
+    font-weight: 500;
+    padding: 3px 7px;
+    border-radius: 4px;
+    z-index: 2;
+  }
+  .card-title {
+    font-size: clamp(15px, 1.25vw, 21px);
+    font-weight: 600;
+    margin: 1.1vh 0 .3vh 0;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card-sub {
+    font-size: clamp(13px, 1.05vw, 17px);
+    color: #9a9a9a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Sport card backgrounds */
+  .bg-usopen {
+    background:
+      linear-gradient(180deg, rgba(0,0,0,.4) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,.45) 100%),
+      linear-gradient(180deg, #1b3868 0%, #366aa9 45%, #2b5681 80%, #14304a 100%);
+  }
+  .bg-usopen::after {
+    content: "us open";
+    position: absolute;
+    top: 30%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+    font-weight: 800;
+    font-size: clamp(20px, 2vw, 32px);
+    color: #ffd400;
+    letter-spacing: -.04em;
+  }
+  .bg-wisla {
+    background: linear-gradient(90deg, #1d4d9e 0% 50%, #4ea246 50% 100%);
+    position: relative;
+  }
+  .bg-wisla::before, .bg-wisla::after {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 35%; height: 70%;
+    border-radius: 50%;
+    background: rgba(255,255,255,.18);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:clamp(10px, .9vw, 14px); color:#fff;
+    text-align:center;
+  }
+  .bg-wisla::before { content: "WISŁA"; left: 8%; background:#fff; color:#1d4d9e; }
+  .bg-wisla::after { content: "ZL"; right: 8%; background:#ff7e1a; color:#fff; }
+
+  .bg-billiards {
+    background:
+      radial-gradient(circle at 30% 40%, #ed4040 0%, transparent 25%),
+      radial-gradient(circle at 65% 55%, #ffd400 0%, transparent 22%),
+      radial-gradient(circle at 50% 70%, #2c7eff 0%, transparent 22%),
+      radial-gradient(circle at 80% 35%, #4caf50 0%, transparent 20%),
+      linear-gradient(135deg, #0a1f0f 0%, #1a4a2a 100%);
+  }
+  .bg-billiards::after {
+    content: "BILLIARDS";
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-weight: 900;
+    font-size: clamp(18px, 1.9vw, 28px);
+    color: #ffd400;
+    -webkit-text-stroke: 2px #b00;
+    letter-spacing: 0;
+  }
+  .bg-newcastle {
+    background: linear-gradient(90deg, #2c3138 0% 50%, #c8102e 50% 100%);
+    position: relative;
+  }
+  .bg-newcastle::before, .bg-newcastle::after {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 30%; height: 65%;
+    border-radius: 8px;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:clamp(10px, .8vw, 14px);
+    text-align:center;
+  }
+  .bg-newcastle::before { content: "NUFC"; left: 10%; color:#fff; background:rgba(255,255,255,.15); }
+  .bg-newcastle::after { content: "LFC"; right: 10%; color:#fff; background:rgba(255,255,255,.18); }
+
+  .bg-kansas {
+    background: linear-gradient(135deg, #afb52a 0%, #859b1f 100%);
+  }
+  .bg-kansas::after {
+    content: "KU";
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-weight: 900;
+    font-size: clamp(28px, 3vw, 48px);
+    color: #0051ba;
+    text-shadow: 2px 2px 0 #fff;
+  }
+
+  /* MLB / NHL / NCAA card backgrounds */
+  .bg-dbacks {
+    background: linear-gradient(120deg, #a71930 0%, #5c0e1c 100%);
+  }
+  .bg-dbacks::after {
+    content: "A";
+    position: absolute;
+    top: 50%; right: 12%;
+    transform: translateY(-50%);
+    font-weight: 900;
+    font-size: clamp(40px, 4vw, 70px);
+    color: #fff;
+    font-style: italic;
+  }
+  .bg-tigers { background: linear-gradient(135deg, #f4640a 0%, #d04600 100%); }
+  .bg-tigers::after {
+    content: "D";
+    position: absolute;
+    top: 50%; right: 12%;
+    transform: translateY(-50%);
+    font-weight: 900;
+    font-size: clamp(45px, 4.5vw, 78px);
+    color: #fff;
+    font-style: italic;
+  }
+  .bg-astros { background: linear-gradient(135deg, #002d62 0%, #001838 100%); }
+  .bg-astros::after {
+    content: "H";
+    position: absolute;
+    top: 50%; right: 14%;
+    transform: translateY(-50%);
+    font-weight: 900;
+    font-size: clamp(40px, 4vw, 70px);
+    color: #eb6e1f;
+  }
+  .bg-vegas { background: linear-gradient(135deg, #2c4138 0%, #1a2620 100%); }
+  .bg-vegas::after {
+    content: "V";
+    position: absolute;
+    top: 50%; right: 14%;
+    transform: translateY(-50%);
+    font-weight: 900;
+    font-size: clamp(40px, 4vw, 70px);
+    color: #b4975a;
+  }
+  .bg-illinois { background: linear-gradient(135deg, #13294b 0%, #0a1730 100%); }
+  .bg-illinois::after {
+    content: "I";
+    position: absolute;
+    top: 50%; right: 18%;
+    transform: translateY(-50%);
+    font-weight: 900;
+    font-size: clamp(40px, 4vw, 70px);
+    color: #e84a27;
+  }
+
+  .news-card .card-title {
+    position: absolute;
+    top: 32%; left: 10px;
+    font-size: clamp(12px, 1vw, 16px);
+    line-height: 1.15;
+    color: #fff;
+    z-index: 2;
+    max-width: 55%;
+    text-shadow: 0 1px 4px rgba(0,0,0,.35);
+    white-space: normal;
+  }
+
+  /* =========================================================
+     SEARCH SCREEN
+     ========================================================= */
+  .search-bg {
+    position: absolute; inset: 0;
+    background: #000 url('./img/bg-gradient.png') center center / cover no-repeat;
+  }
+
+  .search-top {
+    position: absolute;
+    top: 5vh; left: 4vw; right: 4vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 5;
+  }
+  .search-icon-large {
+    display: flex; align-items: center; gap: 1.2vw;
+    color: #fff;
+  }
+  .search-icon-large svg {
+    width: 3.2vw; height: 3.2vw;
+    min-width: 36px; min-height: 36px;
+  }
+  .search-query {
+    font-size: clamp(20px, 2.2vw, 36px);
+    font-weight: 700;
+    color: #fff;
+    min-height: 1.1em;
+    letter-spacing: -.01em;
+  }
+  .search-query .caret {
+    display: inline-block;
+    width: .12em;
+    height: 1em;
+    background: #fff;
+    vertical-align: -.15em;
+    margin-left: .05em;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .hold-dictate {
+    font-size: clamp(14px, 1.3vw, 20px);
+    color: rgba(255,255,255,.85);
+    display: flex; align-items: center; gap: .6vw;
+  }
+  .mic-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2vw; height: 2vw;
+    min-width: 26px; min-height: 26px;
+    background: rgba(255,255,255,.18);
+    border-radius: 50%;
+    transition: all .2s ease;
+  }
+  .mic-pill svg { width: 60%; height: 60%; color: #fff; }
+  .hold-dictate.armable { cursor: pointer; }
+  .hold-dictate.armable:hover .mic-pill { background: rgba(255,255,255,.35); transform: scale(1.05); }
+
+  /* Keyboard */
+  .keyboard {
+    position: absolute;
+    top: 14vh;
+    left: 4vw; right: 4vw;
+    display: flex;
+    align-items: center;
+    gap: .8vw;
+    flex-wrap: nowrap;
+    z-index: 5;
+  }
+  .key {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,.85);
+    font-size: clamp(18px, 1.8vw, 30px);
+    font-weight: 400;
+    padding: .8vh 0;
+    min-width: 2.5vw;
+    text-align: center;
+    transition: all .15s ease;
+    border-radius: 8px;
+    flex: 1 1 auto;
+  }
+  .key:hover {
+    color: #fff;
+    background: rgba(255,255,255,.12);
+    transform: scale(1.1);
+  }
+  .key.special {
+    background: rgba(255,255,255,.12);
+    color: #fff;
+    font-size: clamp(11px, 1vw, 16px);
+    font-weight: 600;
+    padding: .8vh 1vw;
+    min-width: 3.5vw;
+    flex: 0 0 auto;
+  }
+  .key.special:hover {
+    background: rgba(255,255,255,.25);
+  }
+  .key.pressed {
+    background: rgba(255,255,255,.4);
+    color: #fff;
+  }
+
+  .keyboard-divider {
+    position: absolute;
+    top: 21vh;
+    left: 4vw; right: 4vw;
+    height: 1px;
+    background: rgba(255,255,255,.15);
+    z-index: 4;
+  }
+
+  /* Suggestion chips */
+  .suggestions {
+    position: absolute;
+    top: 23vh;
+    left: 4vw; right: 4vw;
+    display: flex;
+    gap: 1vw;
+    flex-wrap: nowrap;
+    overflow: visible;       /* allow hover scale to render fully */
+    padding: 6px 0;          /* extra breathing room top/bottom */
+    z-index: 5;
+  }
+  .suggestion {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,.5);
+    color: rgba(255,255,255,.95);
+    border-radius: 999px;
+    padding: 1.4vh 1.9vw;
+    font-size: clamp(15px, 1.25vw, 22px);
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all .2s ease;
+  }
+  .suggestion:hover {
+    background: rgba(255,255,255,.18);
+    transform: scale(1.025);
+  }
+
+  /* Ask Fubo center text */
+  .center-stack {
+    position: absolute;
+    left: 50%;
+    top: 58%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 3;
+  }
+  .center-badge-img {
+    display: block;
+    margin: 0 auto 2.5vh;
+    width: auto;
+    height: clamp(38px, 5.5vh, 80px);
+  }
+  .center-title {
+    font-size: clamp(30px, 4vw, 68px);
+    font-weight: 700;
+    line-height: 1.08;
+    color: #fff;
+    letter-spacing: -.02em;
+    margin: 0;
+    max-width: 90vw;
+  }
+
+  /* =========================================================
+     DICTATION STATE
+     ========================================================= */
+  .mic-stage {
+    position: absolute;
+    left: 50%;
+    top: 60%;
+    transform: translate(-50%, -50%);
+    width: 38vw;
+    height: 38vw;
+    max-width: 540px;
+    max-height: 540px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .mic-button {
+    position: relative;
+    width: 8vw; height: 8vw;
+    min-width: 100px; min-height: 100px;
+    max-width: 140px; max-height: 140px;
+    border-radius: 50%;
+    background: #fff;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 5;
+    pointer-events: auto;
+    cursor: pointer;
+    box-shadow: 0 0 0 0 rgba(255,255,255,0);
+    transition: box-shadow .2s ease, transform .15s ease;
+  }
+  .mic-button.idle { background: #fff; }
+  .mic-button.idle:hover { transform: scale(1.05); }
+  .mic-button.active {
+    background: #fff;
+    animation: mic-bob 1.4s ease-in-out infinite;
+  }
+  @keyframes mic-bob {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.06); }
+  }
+  .mic-button svg {
+    width: 50%; height: 50%;
+    color: #1a1a1a;
+  }
+  .mic-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,.45);
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .mic-stage.listening .mic-ring {
+    animation: ripple 2.4s cubic-bezier(.2,.7,.3,1) infinite;
+  }
+  .mic-stage.listening .mic-ring:nth-child(2) { animation-delay: .4s; }
+  .mic-stage.listening .mic-ring:nth-child(3) { animation-delay: .8s; }
+  .mic-stage.listening .mic-ring:nth-child(4) { animation-delay: 1.2s; }
+  .mic-stage.listening .mic-ring:nth-child(5) { animation-delay: 1.6s; }
+  .mic-stage.listening .mic-ring:nth-child(6) { animation-delay: 2.0s; }
+  @keyframes ripple {
+    0%   { opacity: 0; transform: scale(.25); border-color: rgba(255,255,255,.7); }
+    20%  { opacity: 1; }
+    100% { opacity: 0; transform: scale(1.15); border-color: rgba(255,255,255,.05); }
+  }
+
+  /* =========================================================
+     THINKING / RESULTS COMMON
+     ========================================================= */
+  /* Background gradient — uses the actual BG Gradient.png asset */
+  .results-bg {
+    position: absolute; inset: 0;
+    overflow: hidden;
+    background: #000 url('./img/bg-gradient.png') center center / cover no-repeat;
+  }
+  .close-btn {
+    position: absolute;
+    top: 4vh; right: 4vw;
+    display: inline-flex;
+    align-items: center;
+    gap: .55vw;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: clamp(14px, 1.3vw, 22px);
+    font-weight: 700;
+    padding: 1vh 1.4vw;
+    border-radius: 999px;
+    transition: background .2s ease;
+    z-index: 10;
+  }
+  .close-btn:hover { background: rgba(255,255,255,.13); }
+  .close-btn svg { width: 1.4vw; height: 1.4vw; min-width: 18px; min-height: 18px; }
+
+  /* Vertical layout stack for results / thinking screens */
+  .layout-stack {
+    position: absolute;
+    inset: 5vh 0 5vh 5vw;   /* no right padding — cards bleed off right edge */
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+    overflow: visible;
+  }
+  .layout-stack > * { pointer-events: auto; }
+  .layout-stack > * + * { margin-top: 64px; }
+
+  .status-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1vh;
+  }
+  .status-dots {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    font-size: clamp(13px, 1.2vw, 20px);
+    color: rgba(255,255,255,.85);
+    font-weight: 500;
+  }
+  /* Tight but visibly separated cluster */
+  .status-dots .dot + .dot { margin-left: 4px; }
+  .status-dots .dot:last-of-type { margin-right: 14px; }
+  .dot {
+    width: .55vw; height: .55vw;
+    min-width: 7px; min-height: 7px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.55);
+  }
+  .dot.b { background: #4f46e5; }
+  .dot.r { background: #ec4444; }
+  /* Animate dots only on the thinking screen */
+  #thinking .status-dots .dot {
+    animation: dot-pulse 1.4s ease-in-out infinite;
+  }
+  #thinking .status-dots .dot:nth-of-type(1) { animation-delay: 0s; }
+  #thinking .status-dots .dot:nth-of-type(2) { animation-delay: .22s; }
+  #thinking .status-dots .dot:nth-of-type(3) { animation-delay: .44s; }
+  /* Results-page: no dots, just the status text */
+  #results .status-dots .dot { display: none; }
+  #results .status-dots .dot:last-of-type { margin-right: 0; }
+  @keyframes dot-pulse {
+    0%, 70%, 100% { opacity: .45; transform: scale(.95); }
+    35%           { opacity: 1;   transform: scale(1.1); }
+  }
+  .status-headline {
+    font-size: clamp(22px, 2.2vw, 38px);
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -.015em;
+    margin: 0;
+    max-width: 70vw;
+  }
+
+  /* Card row (results / thinking) — horizontally scrollable.
+     Padding on all sides gives the focused outline (2.5px stroke + 4px offset)
+     room to render without being clipped by the scroll container. Negative
+     margin-left cancels the left padding visually so cards still align with
+     the title above. */
+  .result-row {
+    display: flex;
+    gap: 1.6vw;
+    padding: 12px 5vw 12px 12px;
+    margin-left: -12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    scroll-snap-type: x proximity;
+    scroll-padding-left: 12px;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  .result-row::-webkit-scrollbar { display: none; }
+  .result-row > .result-card { scroll-snap-align: start; }
+  .result-card {
+    flex: 0 0 auto;
+    width: 17vw;
+    min-width: 220px;
+    aspect-ratio: 9 / 16;
+    max-height: 60vh;
+    border-radius: 18px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: transform .25s ease;
+  }
+  .result-card:hover { transform: translateY(-4px); }
+
+  /* Thinking placeholders — flat white at low opacity.
+     Higher-specificity selector beats `.result-card { background-color: #1a1a1a }`
+     defined later in the cascade. */
+  .result-card.placeholder {
+    background-color: rgba(255, 255, 255, 0.18);
+    background-image: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-card.placeholder::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg,
+      transparent 35%,
+      rgba(255,255,255,.12) 50%,
+      transparent 65%);
+    transform: translateX(-100%);
+    animation: shimmer 1.8s infinite;
+  }
+  @keyframes shimmer {
+    to { transform: translateX(100%); }
+  }
+
+  /* Result cards (photo-style) */
+  .result-card {
+    background-color: #1a1a1a;
+  }
+  .result-card .card-photo {
+    position: absolute; inset: 0;
+    overflow: hidden;
+  }
+  .result-card .card-photo img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform .4s ease;
+  }
+  .result-card:hover .card-photo img {
+    transform: scale(1.05);
+  }
+
+  /* Empty card — used when there's no real result photo */
+  .result-card.card-empty {
+    background-color: rgba(255, 255, 255, 0.30) !important;
+  }
+  .result-card.card-empty .card-photo,
+  .result-card.card-empty .gradient-overlay,
+  .result-card.card-empty .card-label {
+    display: none;
+  }
+  .result-card .gradient-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 45%, rgba(0,0,0,.9) 100%);
+    pointer-events: none;
+  }
+  .result-card .card-label {
+    position: absolute;
+    left: 1.1vw; right: 1.1vw; bottom: 1.6vh;
+    color: #fff;
+    font-size: clamp(13px, 1.05vw, 18px);
+    font-weight: 600;
+    line-height: 1.2;
+    z-index: 2;
+    text-shadow: 0 1px 4px rgba(0,0,0,.45);
+  }
+  .result-card.focused {
+    outline: 2.5px solid #fff;
+    outline-offset: 4px;
+    border-radius: 18px;
+  }
+
+  /* "Was it helpful?" feedback row */
+  .feedback-row {
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+    z-index: 10;
+  }
+  .feedback-label {
+    font-size: clamp(13px, 1.15vw, 20px);
+    color: rgba(255,255,255,.92);
+    font-weight: 500;
+    margin-right: .3vw;
+  }
+  .feedback-btn {
+    width: 3vw; height: 3vw;
+    min-width: 40px; min-height: 40px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,.5);
+    background: transparent;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .2s ease;
+  }
+  .feedback-btn:hover {
+    background: rgba(255,255,255,.15);
+    border-color: rgba(255,255,255,.85);
+    transform: scale(1.05);
+  }
+  .feedback-btn svg {
+    width: 55%; height: 55%;
+  }
+  .feedback-btn.rated-up   { background: rgba(74,222,128,.25); border-color: #4ade80; }
+  .feedback-btn.rated-down { background: rgba(248,113,113,.25); border-color: #f87171; }
+  .feedback-thanks {
+    margin-left: .6vw;
+    font-size: clamp(13px, 1.1vw, 18px);
+    color: rgba(255,255,255,.85);
+    opacity: 0;
+    transition: opacity .3s ease;
+  }
+  .feedback-thanks.show { opacity: 1; }
+
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- ============================================================
+       HOME SCREEN
+       ============================================================ -->
+  <div class="screen active" id="home">
+    <aside class="home-sidebar">
+      <div class="avatar" title="Avatar">
+        <img src="./img/avatar.png" alt="Avatar">
+      </div>
+      <div class="nav-icons">
+      <div class="side-icon" title="Search">
+        <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+          <path d="M33.1184 19.3376C36.7471 19.2553 40.2679 20.575 42.9485 23.0222C45.6292 25.4697 47.2637 28.8568 47.511 32.4782C47.7582 36.0997 46.5997 39.6774 44.2766 42.4665L52.2912 50.4802C52.4102 50.5991 52.5052 50.7399 52.5696 50.8952C52.6339 51.0507 52.6672 51.2182 52.6672 51.3864C52.6671 51.5546 52.6339 51.7214 52.5696 51.8767C52.5052 52.0321 52.4102 52.1728 52.2912 52.2917C52.1723 52.4107 52.0316 52.5057 51.8762 52.57C51.7209 52.6344 51.5541 52.6676 51.386 52.6677C51.2177 52.6677 51.0502 52.6344 50.8947 52.57C50.7394 52.5056 50.5986 52.4106 50.4797 52.2917L42.466 44.2771C39.6769 46.6002 36.0992 47.7587 32.4778 47.5114C28.8563 47.2642 25.4692 45.6296 23.0217 42.9489C20.5745 40.2684 19.2548 36.7476 19.3371 33.1189C19.4196 29.4899 20.8983 26.0323 23.4651 23.4655C26.0318 20.8988 29.4894 19.4201 33.1184 19.3376ZM35.7053 22.1521C33.4695 21.7073 31.1512 21.936 29.0451 22.8083C26.9392 23.6807 25.1387 25.1581 23.8723 27.0534C22.606 28.9488 21.9299 31.1773 21.9299 33.4568C21.9333 36.5126 23.149 39.4425 25.3098 41.6032C27.4706 43.764 30.4005 44.9797 33.4563 44.9831C35.7359 44.9831 37.9642 44.3062 39.8596 43.0398C41.7549 41.7734 43.2323 39.9738 44.1047 37.8679C44.9771 35.7618 45.2057 33.4436 44.761 31.2077C44.3162 28.9721 43.2185 26.9182 41.6067 25.3064C39.9948 23.6945 37.9409 22.5969 35.7053 22.1521Z"/>
+        </svg>
+      </div>
+      <div class="side-icon" title="Home">
+        <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+          <path d="M35.9932 20.168C36.6152 20.168 37.2146 20.403 37.6748 20.8271C37.6801 20.8333 37.6863 20.8384 37.6924 20.8438L50.1924 32.7959C50.447 33.0332 50.65 33.3216 50.7891 33.6426C50.9281 33.9636 51 34.3106 51 34.6611V49.3008C51 49.9726 50.7363 50.6167 50.2676 51.0918C49.7987 51.5669 49.163 51.834 48.5 51.834H41C40.337 51.834 39.7013 51.5669 39.2324 51.0918C38.7637 50.6167 38.5 49.9726 38.5 49.3008V41.7002H33.5V49.3008C33.5 49.9726 33.2363 50.6167 32.7676 51.0918C32.2987 51.5669 31.663 51.834 31 51.834H23.5C22.837 51.834 22.2013 51.5669 21.7324 51.0918C21.2637 50.6167 21 49.9726 21 49.3008V34.6611C21 34.3106 21.0719 33.9636 21.2109 33.6426C21.35 33.3216 21.553 33.0332 21.8076 32.7959L34.2939 20.8438L34.3105 20.8271C34.7708 20.403 35.3711 20.168 35.9932 20.168ZM23.5176 34.6455L23.5 34.6611V49.3008H31V41.7002C31 41.0283 31.2636 40.3833 31.7324 39.9082C32.2012 39.4332 32.8371 39.166 33.5 39.166H38.5C39.1629 39.166 39.7988 39.4332 40.2676 39.9082C40.7364 40.3833 41 41.0283 41 41.7002V49.3008H48.5L48.502 34.6582L48.4844 34.6426L36 22.6982L23.5176 34.6455Z"/>
+        </svg>
+      </div>
+      <div class="side-icon" title="Guide">
+        <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+          <path d="M48.5 37.25C49.163 37.25 49.7988 37.5136 50.2676 37.9824C50.7364 38.4511 50.9999 39.0871 51 39.75V46C51 46.6629 50.7364 47.2988 50.2676 47.7676C49.7988 48.2365 49.1631 48.5 48.5 48.5H23.5C22.8369 48.5 22.2012 48.2365 21.7324 47.7676C21.2636 47.2988 21 46.6629 21 46V39.75C21.0001 39.0871 21.2636 38.4511 21.7324 37.9824C22.2012 37.5136 22.837 37.25 23.5 37.25H48.5ZM23.5 46H31V39.75H23.5V46ZM33.5 46H48.5V39.75H33.5V46ZM48.5 23.5C49.163 23.5 49.7988 23.7636 50.2676 24.2324C50.7364 24.7011 50.9999 25.3371 51 26V32.25C51 32.9129 50.7364 33.5488 50.2676 34.0176C49.7988 34.4865 49.1631 34.75 48.5 34.75H23.5C22.8369 34.75 22.2012 34.4865 21.7324 34.0176C21.2636 33.5488 21 32.9129 21 32.25V26C21.0001 25.3371 21.2636 24.7011 21.7324 24.2324C22.2012 23.7636 22.837 23.5 23.5 23.5H48.5ZM23.5 32.25H31V26H23.5V32.25ZM33.5 26V32.25H48.5V26H33.5Z"/>
+        </svg>
+      </div>
+      <div class="side-icon" title="Recordings">
+        <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+          <path d="M47.25 31C49.3211 31 51 32.679 51 34.75V47.25C51 49.3211 49.3211 51 47.25 51H24.75C22.6789 51 21 49.3211 21 47.25V34.75C21 32.679 22.6789 31 24.75 31H47.25ZM24.75 33.5C24.0597 33.5 23.5 34.0597 23.5 34.75V47.25C23.5 47.9404 24.0596 48.5 24.75 48.5H47.25C47.9404 48.5 48.5 47.9404 48.5 47.25V34.75C48.5 34.0597 47.9403 33.5 47.25 33.5H24.75ZM44.75 26C45.4403 26 46 26.5597 46 27.25C46 27.9404 45.4404 28.5 44.75 28.5H27.25C26.5596 28.5 26 27.9404 26 27.25C26 26.5597 26.5597 26 27.25 26H44.75ZM39.75 21C40.4403 21 41 21.5597 41 22.25C41 22.9404 40.4404 23.5 39.75 23.5H32.25C31.5596 23.5 31 22.9404 31 22.25C31 21.5597 31.5597 21 32.25 21H39.75Z"/>
+        </svg>
+      </div>
+      <div class="side-icon active" title="Sports">
+        <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+          <path d="M46.2222 21C46.8999 21 47.5496 21.2637 48.0288 21.7324C48.5081 22.2013 48.7778 22.837 48.7778 23.5V24.75H52.6108C53.2886 24.75 53.9392 25.0136 54.4185 25.4824C54.8975 25.9512 55.1665 26.5871 55.1665 27.25V29.75C55.1665 31.4076 54.4936 32.9978 53.2954 34.1699C52.0973 35.3419 50.4721 35.9999 48.7778 36H48.1519C46.6122 40.6781 42.3793 44.1798 37.2778 44.6846V48.5H41.1108C41.4497 48.5 41.7745 48.6319 42.0142 48.8662C42.2538 49.1006 42.3891 49.4185 42.3892 49.75C42.3892 50.0815 42.2538 50.3994 42.0142 50.6338C41.7745 50.8682 41.4497 51 41.1108 51H30.8892C30.5503 51 30.2245 50.8682 29.9849 50.6338C29.7454 50.3994 29.6108 50.0814 29.6108 49.75C29.6109 49.4186 29.7454 49.1006 29.9849 48.8662C30.2245 48.6318 30.5503 48.5 30.8892 48.5H34.7222V44.6895C32.2336 44.4432 29.8733 43.4886 27.9331 41.9443C25.9929 40.4001 24.5579 38.3335 23.8052 36H23.2222C22.3832 36 21.552 35.8385 20.7769 35.5244C20.0019 35.2104 19.2977 34.7501 18.7046 34.1699C17.5064 32.9978 16.8335 31.4076 16.8335 29.75V27.25C16.8335 26.587 17.1024 25.9512 17.5815 25.4824C18.0608 25.0136 18.7114 24.75 19.3892 24.75H23.2222V23.5C23.2222 22.8371 23.4911 22.2012 23.9702 21.7324C24.4495 21.2636 25.1001 21 25.7778 21H46.2222ZM25.7778 23.5V32.25C25.7778 34.9022 26.8549 37.4459 28.772 39.3213C30.6889 41.1964 33.2887 42.2499 35.9995 42.25H36.0776C41.6711 42.2094 46.2222 37.6594 46.2222 32.1094V23.5H25.7778ZM19.3892 27.25V29.75C19.3892 30.7444 19.7925 31.6981 20.5112 32.4014C21.2301 33.1046 22.2055 33.5 23.2222 33.5H23.2847C23.2431 33.0833 23.2222 32.6667 23.2222 32.25V27.25H19.3892ZM48.7778 27.25V32.1094C48.7771 32.574 48.7502 33.0382 48.6978 33.5H48.7778C49.7944 33.4999 50.769 33.1046 51.4878 32.4014C52.2067 31.6981 52.6108 30.7446 52.6108 29.75V27.25H48.7778Z"/>
+        </svg>
+      </div>
+      <div class="side-icon" title="On now">
+        <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+          <path d="M41.1279 48.5C41.468 48.5 41.7947 48.6318 42.0352 48.8662C42.2754 49.1006 42.4101 49.4186 42.4102 49.75C42.4102 50.0814 42.2754 50.3994 42.0352 50.6338C41.7947 50.8682 41.468 51 41.1279 51H30.8721C30.532 51 30.2053 50.8682 29.9648 50.6338C29.7246 50.3994 29.5898 50.0814 29.5898 49.75C29.5899 49.4186 29.7246 49.1006 29.9648 48.8662C30.2053 48.6318 30.532 48.5 30.8721 48.5H41.1279ZM48.8203 21C49.8404 21 50.8187 21.3954 51.54 22.0986C52.2613 22.8019 52.6669 23.7555 52.667 24.75V42.25C52.667 43.2445 52.2612 44.1981 51.54 44.9014C50.8187 45.6046 49.8404 46 48.8203 46H23.1797C22.1596 46 21.1813 45.6046 20.46 44.9014C19.7388 44.1981 19.333 43.2445 19.333 42.25V24.75C19.3331 23.7555 19.7387 22.8019 20.46 22.0986C21.1813 21.3954 22.1596 21 23.1797 21H48.8203ZM23.1797 23.5C22.8397 23.5 22.5129 23.6318 22.2725 23.8662C22.0322 24.1006 21.8975 24.4186 21.8975 24.75V42.25C21.8975 42.5813 22.0323 42.8994 22.2725 43.1338C22.5129 43.3682 22.8397 43.5 23.1797 43.5H48.8203C49.1603 43.5 49.4871 43.3682 49.7275 43.1338C49.9677 42.8994 50.1025 42.5813 50.1025 42.25V24.75C50.1025 24.4186 49.9678 24.1006 49.7275 23.8662C49.4871 23.6318 49.1603 23.5 48.8203 23.5H23.1797ZM33.498 27.251C33.7299 27.2619 33.9544 27.3344 34.1475 27.46L41.8398 32.46C42.0156 32.574 42.1601 32.7287 42.2598 32.9102C42.3594 33.0916 42.4111 33.2942 42.4111 33.5C42.4111 33.706 42.3595 33.9093 42.2598 34.0908C42.16 34.2723 42.0156 34.427 41.8398 34.541L34.1475 39.541C33.9544 39.6666 33.7299 39.738 33.498 39.749C33.2662 39.76 33.0357 39.7094 32.8311 39.6025C32.6264 39.4957 32.4552 39.3368 32.3359 39.1426C32.2168 38.9484 32.1541 38.7263 32.1543 38.5V28.5C32.1542 28.2737 32.2167 28.0516 32.3359 27.8574C32.4552 27.6632 32.6264 27.5043 32.8311 27.3975C33.0357 27.2907 33.2662 27.24 33.498 27.251Z"/>
+        </svg>
+      </div>
+      <div class="side-icon" title="Movies">
+        <svg viewBox="0 0 72 72" xmlns="http://www.w3.org/2000/svg">
+          <path d="M46.1486 21.0827C46.7899 20.9153 47.4725 21.0042 48.048 21.3297C48.6234 21.6553 49.046 22.1913 49.2238 22.8219L50.5158 27.5094C50.5598 27.6686 50.5714 27.835 50.55 27.9987C50.5285 28.1624 50.4744 28.3206 50.3908 28.4635C50.3072 28.6064 50.1955 28.7315 50.0627 28.8317C49.9299 28.9319 49.778 29.0045 49.6164 29.0465L32.5314 33.4987H50.5666C50.9024 33.4988 51.2246 33.6305 51.4621 33.8649C51.6995 34.0993 51.8331 34.4173 51.8332 34.7487V48.4997C51.8332 49.1626 51.5659 49.7984 51.091 50.2672C50.616 50.736 49.9717 50.9996 49.3 50.9997H23.9679C23.2962 50.9997 22.652 50.736 22.1769 50.2672C21.7019 49.7984 21.4348 49.1627 21.4347 48.4997V34.6803L20.257 30.3952C20.1686 30.0824 20.1445 29.7553 20.1867 29.4333C20.2289 29.1112 20.336 28.8005 20.5021 28.5202C20.6673 28.2365 20.888 27.9882 21.1515 27.7897C21.4152 27.5912 21.7172 27.4462 22.0383 27.3639L46.1486 21.0827ZM23.9679 35.9987V48.4997H49.3V35.9987H23.9679ZM22.7121 29.7702L23.6623 33.2204L31.3596 31.2174L26.9074 28.6764L22.7121 29.7702ZM30.3849 27.7751L34.8371 30.3092L40.6847 28.7858L36.2336 26.2487L30.3849 27.7751ZM39.7082 25.3464L44.1603 27.8844L47.7414 26.9469L46.7922 23.4987L39.7082 25.3464Z"/>
+        </svg>
+      </div>
+      </div>
+    </aside>
+
+    <div class="home-content">
+      <div class="chip-bar">
+        <button class="chip ask-fubo-chip" id="askFuboChip">
+          <svg class="sparkle" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.3333 0L15.0428 4.89344C16.2442 8.32838 18.801 11.0355 22.0451 12.3076L26.6667 14.1176L22.0451 15.9277C18.801 17.1997 16.2443 19.9069 15.0428 23.3419L13.3333 28.2353L11.6239 23.3419C10.4225 19.9069 7.86569 17.1998 4.62158 15.9277L0 14.1176L4.62158 12.3076C7.86569 11.0356 10.4224 8.32838 11.6239 4.89344L13.3333 0Z" fill="currentColor"/>
+            <path d="M25.7778 18.8235L26.5755 21.1071C27.1362 22.7101 28.3293 23.9734 29.8433 24.5671L32 25.4118L29.8433 26.2564C28.3293 26.8501 27.1362 28.1134 26.5755 29.7164L25.7778 32L24.98 29.7164C24.4194 28.1134 23.2262 26.8501 21.7123 26.2564L19.5556 25.4118L21.7123 24.5671C23.2262 23.9735 24.4193 22.7101 24.98 21.1071L25.7778 18.8235Z" fill="currentColor"/>
+          </svg>
+          Ask Fubo
+        </button>
+        <button class="chip active">All</button>
+        <button class="chip">Soccer</button>
+        <button class="chip">Football</button>
+        <button class="chip">Basketball</button>
+        <button class="chip">Hockey</button>
+        <button class="chip">Golf</button>
+        <button class="chip">Baseball</button>
+        <button class="chip">Racing</button>
+        <button class="chip">Tennis</button>
+        <span class="time-chip">12:30pm</span>
+      </div>
+
+      <div class="rail">
+        <h2 class="rail-title">Popular sports</h2>
+        <div class="rail-row">
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img bg-usopen">
+              <span class="card-time">3:30pm</span>
+            </div>
+            <div class="card-title">Men's Women's First Round</div>
+            <div class="card-sub">US Open Tennis</div>
+          </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img bg-wisla">
+              <span class="card-time">3:30pm</span>
+            </div>
+            <div class="card-title">Wisla Plock vs Zaglebie Lu…</div>
+            <div class="card-sub">Ekstraklasa Soccer</div>
+          </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img bg-billiards">
+              <span class="card-time">3:30pm</span>
+            </div>
+            <div class="card-title">2025 Women's Profession…</div>
+            <div class="card-sub">Billiards</div>
+          </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img bg-newcastle">
+              <span class="card-time">3:30pm</span>
+            </div>
+            <div class="card-title">Newcastle United FC vs Li…</div>
+            <div class="card-sub">English Premier League</div>
+          </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img bg-kansas">
+              <span class="card-time">3:30pm</span>
+            </div>
+            <div class="card-title">Kansas at…</div>
+            <div class="card-sub">Women's College</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rail">
+        <h2 class="rail-title">Sports roundup</h2>
+        <div class="rail-row">
+          <div class="card news-card" onclick="goToSearch()">
+            <div class="card-img bg-dbacks">
+              <span class="card-tag">MLB News</span>
+              <div class="card-title">Mets @ Dbacks Preview</div>
+            </div>
+          </div>
+          <div class="card news-card" onclick="goToSearch()">
+            <div class="card-img bg-tigers">
+              <span class="card-tag">MLB News</span>
+              <div class="card-title">Tigers vs Rangers Highlights</div>
+            </div>
+          </div>
+          <div class="card news-card" onclick="goToSearch()">
+            <div class="card-img bg-astros">
+              <span class="card-tag">MLB News</span>
+              <div class="card-title">Astros vs Reds Highlights</div>
+            </div>
+          </div>
+          <div class="card news-card" onclick="goToSearch()">
+            <div class="card-img bg-vegas">
+              <span class="card-tag">NHL News</span>
+              <div class="card-title">Skinner Highlights</div>
+            </div>
+          </div>
+          <div class="card news-card" onclick="goToSearch()">
+            <div class="card-img bg-illinois">
+              <span class="card-tag">NCAAFB News</span>
+              <div class="card-title">Illinois Football Analysis</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rail">
+        <h2 class="rail-title">Where you left off</h2>
+        <div class="rail-row">
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img" style="background:linear-gradient(135deg,#1d4d9e 0%,#0a2d65 100%);">
+              <span class="card-time">2:15pm</span>
+            </div>
+          </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img" style="background:linear-gradient(135deg,#c8102e 0%,#7a0a1f 100%);">
+              <span class="card-time">1:45pm</span>
+            </div>
+          </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img" style="background:linear-gradient(135deg,#3e2723 0%,#1a0e0a 100%);">
+              <span class="card-time">11:30am</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SEARCH SCREEN
+       ============================================================ -->
+  <div class="screen" id="search">
+    <div class="search-bg"></div>
+
+    <div class="search-top">
+      <div class="search-icon-large">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+        </svg>
+        <span class="search-query" id="queryText"><span class="caret"></span></span>
+      </div>
+      <div class="hold-dictate armable" id="micTrigger">
+        <span>Hold</span>
+        <span class="mic-pill">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <rect x="9" y="3" width="6" height="12" rx="3"/>
+            <path d="M5 11a7 7 0 0014 0M12 18v3" stroke="currentColor" stroke-width="2" fill="none"/>
+          </svg>
+        </span>
+        <span>to dictate</span>
+      </div>
+    </div>
+
+    <div class="keyboard" id="keyboard">
+      <button class="key special" data-key="123">123</button>
+      <button class="key special" data-key=" ">SPACE</button>
+      <button class="key" data-key="a">a</button>
+      <button class="key" data-key="b">b</button>
+      <button class="key" data-key="c">c</button>
+      <button class="key" data-key="d">d</button>
+      <button class="key" data-key="e">e</button>
+      <button class="key" data-key="f">f</button>
+      <button class="key" data-key="g">g</button>
+      <button class="key" data-key="h">h</button>
+      <button class="key" data-key="i">i</button>
+      <button class="key" data-key="j">j</button>
+      <button class="key" data-key="k">k</button>
+      <button class="key" data-key="l">l</button>
+      <button class="key" data-key="m">m</button>
+      <button class="key" data-key="n">n</button>
+      <button class="key" data-key="o">o</button>
+      <button class="key" data-key="p">p</button>
+      <button class="key" data-key="q">q</button>
+      <button class="key" data-key="r">r</button>
+      <button class="key" data-key="s">s</button>
+      <button class="key" data-key="t">t</button>
+      <button class="key" data-key="u">u</button>
+      <button class="key" data-key="v">v</button>
+      <button class="key" data-key="w">w</button>
+      <button class="key" data-key="x">x</button>
+      <button class="key" data-key="y">y</button>
+      <button class="key" data-key="z">z</button>
+      <button class="key special" data-key="BACK" title="Delete">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;vertical-align:middle">
+          <path d="M21 5H8L2 12l6 7h13a2 2 0 002-2V7a2 2 0 00-2-2zM18 9l-6 6m0-6l6 6" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="keyboard-divider"></div>
+
+    <div class="suggestions">
+      <button class="suggestion" onclick="useSuggestion(this)">All Ohtani at-bats last night</button>
+      <button class="suggestion" onclick="useSuggestion(this)">Knicks scores from last week</button>
+      <button class="suggestion" onclick="useSuggestion(this)">Brazil goals from World Cup</button>
+    </div>
+
+    <div class="center-stack" id="centerStack">
+      <img class="center-badge-img" src="./icons/beta-badge.svg" alt="Ask Fubo BETA">
+      <h1 class="center-title">Ask about your favorite<br>teams' highlights</h1>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       DICTATION STATE (overlay on search bg)
+       ============================================================ -->
+  <div class="screen" id="dictate">
+    <div class="search-bg"></div>
+
+    <div class="search-top">
+      <div class="search-icon-large">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+        </svg>
+        <span class="search-query" id="dictateText"><span class="caret"></span></span>
+      </div>
+      <div class="hold-dictate">
+        <span>Hold</span>
+        <span class="mic-pill">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <rect x="9" y="3" width="6" height="12" rx="3"/>
+            <path d="M5 11a7 7 0 0014 0M12 18v3" stroke="currentColor" stroke-width="2" fill="none"/>
+          </svg>
+        </span>
+        <span>to dictate</span>
+      </div>
+    </div>
+
+    <div class="keyboard" id="keyboardGhost" style="opacity:.35;pointer-events:none">
+      <button class="key special">123</button>
+      <button class="key special">SPACE</button>
+      <button class="key">a</button><button class="key">b</button><button class="key">c</button>
+      <button class="key">d</button><button class="key">e</button><button class="key">f</button>
+      <button class="key">g</button><button class="key">h</button><button class="key">i</button>
+      <button class="key">j</button><button class="key">k</button><button class="key">l</button>
+      <button class="key">m</button><button class="key">n</button><button class="key">o</button>
+      <button class="key">p</button><button class="key">q</button><button class="key">r</button>
+      <button class="key">s</button><button class="key">t</button><button class="key">u</button>
+      <button class="key">v</button><button class="key">w</button><button class="key">x</button>
+      <button class="key">y</button><button class="key">z</button>
+      <button class="key special">⌫</button>
+    </div>
+    <div class="keyboard-divider"></div>
+
+    <div class="mic-stage" id="micStage">
+      <div class="mic-ring"></div>
+      <div class="mic-ring"></div>
+      <div class="mic-ring"></div>
+      <div class="mic-ring"></div>
+      <div class="mic-ring"></div>
+      <div class="mic-ring"></div>
+      <button class="mic-button active" id="micButton">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <rect x="9" y="3" width="6" height="12" rx="3"/>
+          <path d="M5 11a7 7 0 0014 0M12 18v3" stroke="currentColor" stroke-width="2" fill="none"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       THINKING STATE
+       ============================================================ -->
+  <div class="screen" id="thinking">
+    <div class="results-bg"></div>
+    <button class="close-btn" onclick="goHome()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M9 14l-4-4 4-4M5 10h11a4 4 0 010 8h-2"/>
+      </svg>
+      Close
+    </button>
+    <div class="layout-stack">
+      <div class="status-row">
+        <div class="status-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span> Thinking…</div>
+        <h2 class="status-headline">Looking through our library….</h2>
+      </div>
+      <div class="result-row">
+        <div class="result-card placeholder"></div>
+        <div class="result-card placeholder"></div>
+        <div class="result-card placeholder"></div>
+        <div class="result-card placeholder"></div>
+        <div class="result-card placeholder"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       RESULTS STATE
+       ============================================================ -->
+  <div class="screen" id="results">
+    <div class="results-bg"></div>
+    <button class="close-btn" onclick="goHome()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M9 14l-4-4 4-4M5 10h11a4 4 0 010 8h-2"/>
+      </svg>
+      Close
+    </button>
+    <div class="layout-stack">
+      <div class="status-row">
+        <div class="status-dots">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span id="resultStatusText">5 clips found</span>
+        </div>
+        <h2 class="status-headline" id="resultsHeadline">Here are Patriots touchdowns from yesterday's game</h2>
+      </div>
+
+      <div class="result-row" id="resultsCards">
+        <!-- Cards rendered dynamically based on query topic -->
+      </div>
+
+      <div class="feedback-row">
+        <span class="feedback-label">Was it helpful?</span>
+        <button class="feedback-btn" id="thumbUp" onclick="rateFeedback('up')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M7 11v10H4a1 1 0 01-1-1v-8a1 1 0 011-1h3z"/>
+            <path d="M7 11l4-8c1.5 0 2.5 1 2.5 2.5V9h5.5a2 2 0 012 2.3l-1.4 7A2 2 0 0117.6 20H7"/>
+          </svg>
+        </button>
+        <button class="feedback-btn" id="thumbDown" onclick="rateFeedback('down')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 13V3h3a1 1 0 011 1v8a1 1 0 01-1 1h-3z"/>
+            <path d="M17 13l-4 8c-1.5 0-2.5-1-2.5-2.5V15H5a2 2 0 01-2-2.3l1.4-7A2 2 0 016.4 4H17"/>
+          </svg>
+        </button>
+        <span class="feedback-thanks" id="feedbackThanks">Thanks for the feedback</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* =========================================================
+   State management
+   ========================================================= */
+const screens = {
+  home:     document.getElementById('home'),
+  search:   document.getElementById('search'),
+  dictate:  document.getElementById('dictate'),
+  thinking: document.getElementById('thinking'),
+  results:  document.getElementById('results'),
+};
+let current = 'home';
+
+function show(name) {
+  if (!screens[name]) return;
+  screens[current].classList.remove('active');
+  screens[name].classList.add('active');
+  current = name;
+}
+
+/* =========================================================
+   HOME -> SEARCH
+   ========================================================= */
+const askChip = document.getElementById('askFuboChip');
+askChip.addEventListener('click', goToSearch);
+
+function goToSearch() {
+  resetQuery();
+  show('search');
+}
+
+function goHome() {
+  show('home');
+}
+
+/* =========================================================
+   Keyboard
+   ========================================================= */
+const queryText = document.getElementById('queryText');
+let query = "";
+
+function renderQuery(el) {
+  el.innerHTML = escapeHtml(query) + '<span class="caret"></span>';
+}
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+function resetQuery() {
+  query = "";
+  renderQuery(queryText);
+}
+
+document.querySelectorAll('#keyboard .key').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const k = btn.getAttribute('data-key');
+    if (k === 'BACK') {
+      query = query.slice(0, -1);
+    } else if (k === '123') {
+      // toggle but for prototype just no-op
+      flashKey(btn);
+      return;
+    } else {
+      query += k;
+    }
+    flashKey(btn);
+    renderQuery(queryText);
+    hideCenterStack();
+  });
+});
+function flashKey(btn) {
+  btn.classList.add('pressed');
+  setTimeout(() => btn.classList.remove('pressed'), 120);
+}
+function hideCenterStack() {
+  const stack = document.getElementById('centerStack');
+  if (query.length > 0) stack.style.opacity = '.18';
+  else stack.style.opacity = '1';
+}
+
+/* Keyboard input (real keys) */
+document.addEventListener('keydown', (e) => {
+  if (current !== 'search') return;
+  if (e.key.length === 1 && /[a-zA-Z ]/.test(e.key)) {
+    query += e.key.toLowerCase();
+    renderQuery(queryText);
+    hideCenterStack();
+    const btn = document.querySelector(`#keyboard .key[data-key="${e.key.toLowerCase() === ' ' ? ' ' : e.key.toLowerCase()}"]`);
+    if (btn) flashKey(btn);
+  } else if (e.key === 'Backspace') {
+    query = query.slice(0, -1);
+    renderQuery(queryText);
+    hideCenterStack();
+  } else if (e.key === 'Enter') {
+    if (query.length > 0) submitQuery();
+  } else if (e.key === 'Escape') {
+    goHome();
+  }
+});
+
+/* =========================================================
+   Topic data & routing
+   Each card has { title, img }. img: null → empty placeholder.
+   Status count auto-derives from non-null img count.
+   ========================================================= */
+const topics = {
+  patriots: {
+    headline: "Here are Patriots touchdowns from yesterday's game",
+    cards: [
+      { title: "Patriots Facing Major Test This Week",     img: "./img/patriots-1.png" },
+      { title: "The Patriots Need Answers — Fast",         img: "./img/patriots-2.png" },
+      { title: "Breaking Down the Patriots' Latest Game",  img: "./img/patriots-3.png" },
+      { title: "Can the Patriots Turn Things Around?",     img: "./img/patriots-4.png" },
+      { title: "Patriots Searching Rhythm Again",          img: "./img/patriots-5.png" },
+    ]
+  },
+  brazil: {
+    headline: "Here are Brazil's goals from the World Cup",
+    cards: [
+      { title: "Richarlison's Bicycle Kick Stunner",       img: "./img/brazil-1.png" },
+      { title: "Group-Stage Brace vs Serbia",              img: "./img/brazil-2.png" },
+      { title: "Vini Jr's Trademark Finish",               img: "./img/brazil-3.png" },
+      { title: "Brazil's Joga Bonito Moment",              img: "./img/brazil-4.webp" },
+      { title: "Brazil's Top Scorer Highlight Reel",       img: "./img/brazil-5.png" },
+    ]
+  },
+  ohtani: {
+    headline: "Here are all of Ohtani's at-bats from last night",
+    cards: [
+      { title: "Ohtani's Walk-Off Home Run",               img: "./img/ohtani-1.jpg" },
+      { title: "Two-Run Shot in the 5th",                  img: "./img/ohtani-2.jpg" },
+      { title: "Clutch RBI Double",                        img: "./img/ohtani-3.webp" },
+      { title: "Power Display at the Plate",               img: "./img/ohtani-4.jpg" },
+      { title: "Final At-Bat Highlights",                  img: "./img/ohtani-5.jpg" },
+    ]
+  },
+  knicks: {
+    headline: "Here are the Knicks scores from last week",
+    cards: [
+      { title: "Knicks Clutch Win Over Rivals",            img: "./img/knicks-1.webp" },
+      { title: "Towns Career Night at MSG",                img: "./img/knicks-2.avif" },
+      { title: "Brunson Drops 40 in OT",                   img: "./img/knicks-3.avif" },
+      { title: "Bridges Sparks the Comeback",              img: "./img/knicks-4.jpg" },
+      { title: "Knicks Dominate at the Garden",            img: "./img/knicks-5.jpg" },
+    ]
+  }
+};
+
+function pickTopic(q) {
+  q = (q || '').toLowerCase();
+  if (q.includes('patriot') || q.includes('touchdown'))                    return 'patriots';
+  if (q.includes('ohtani') || q.includes('at-bat') || q.includes('at bat')) return 'ohtani';
+  if (q.includes('richarlison') || q.includes('brazil') || q.includes('world cup')) return 'brazil';
+  if (q.includes('knick') || q.includes('brunson') || q.includes('nba'))   return 'knicks';
+  return 'patriots'; // sensible default
+}
+
+function renderResults(topicKey) {
+  const topic = topics[topicKey] || topics.patriots;
+  const realCount = topic.cards.filter(c => c.img).length;
+  document.getElementById('resultsHeadline').textContent = topic.headline;
+  document.getElementById('resultStatusText').textContent =
+    realCount + ' clip' + (realCount === 1 ? '' : 's') + ' found';
+
+  const container = document.getElementById('resultsCards');
+  container.innerHTML = '';
+
+  topic.cards.forEach((card, i) => {
+    const div = document.createElement('div');
+    const isEmpty = !card.img;
+    const isFocused = !isEmpty && i === topic.cards.findIndex(c => c.img); // focus first real card
+    div.className = 'result-card' + (isEmpty ? ' card-empty' : '') + (isFocused ? ' focused' : '');
+
+    if (!isEmpty) {
+      // Use <img> with onerror so failed loads degrade to the white empty state
+      const onErr =
+        "this.parentNode.parentNode.classList.add('card-empty');" +
+        "this.parentNode.parentNode.classList.remove('focused');" +
+        "this.remove();";
+      div.innerHTML =
+        '<div class="card-photo"><img src="' + card.img + '" alt="" loading="lazy" onerror="' + onErr + '"></div>' +
+        '<div class="gradient-overlay"></div>' +
+        '<div class="card-label">' + escapeHtml(card.title) + '</div>';
+    }
+    container.appendChild(div);
+  });
+  resetFeedback();
+}
+
+function resetFeedback() {
+  document.getElementById('thumbUp').classList.remove('rated-up');
+  document.getElementById('thumbDown').classList.remove('rated-down');
+  document.getElementById('feedbackThanks').classList.remove('show');
+}
+
+function rateFeedback(direction) {
+  resetFeedback();
+  const target = document.getElementById(direction === 'up' ? 'thumbUp' : 'thumbDown');
+  target.classList.add(direction === 'up' ? 'rated-up' : 'rated-down');
+  document.getElementById('feedbackThanks').classList.add('show');
+}
+
+/* =========================================================
+   Suggestions
+   ========================================================= */
+function useSuggestion(el) {
+  const text = el.textContent;
+  query = text.toLowerCase();
+  renderQuery(queryText);
+  hideCenterStack();
+  setTimeout(() => submitQuery(text), 300);
+}
+
+/* =========================================================
+   Submit query -> thinking -> results
+   ========================================================= */
+function submitQuery(textOverride) {
+  const q = (textOverride !== undefined ? textOverride : query) || '';
+  const topicKey = pickTopic(q);
+  show('thinking');
+  setTimeout(() => {
+    renderResults(topicKey);
+    show('results');
+  }, 2400);
+}
+
+/* =========================================================
+   Mic dictation flow
+   ========================================================= */
+const micTrigger   = document.getElementById('micTrigger');
+const dictateText  = document.getElementById('dictateText');
+const micStage     = document.getElementById('micStage');
+const micButton    = document.getElementById('micButton');
+
+const DICTATION_QUERY = "Give me all Richarlison's goals from the World Cup";
+let dictateInterval = null;
+let dictateIndex = 0;
+let dictateStarted = 0;
+let aborted = false;
+
+/* --- Real Web Speech API integration with simulation fallback --- */
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let usingRealMic = false;
+let realTranscript = '';
+
+function startDictation() {
+  aborted = false;
+  dictateIndex = 0;
+  realTranscript = '';
+  usingRealMic = false;
+  dictateText.innerHTML = '<span class="caret"></span>';
+  show('dictate');
+  micStage.classList.add('listening');
+  dictateStarted = Date.now();
+
+  // Try the real microphone first
+  if (SpeechRecognition && location.protocol !== 'file:') {
+    try {
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = (e) => {
+        let finalT = '', interimT = '';
+        for (let i = 0; i < e.results.length; i++) {
+          const t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) finalT += t;
+          else interimT += t;
+        }
+        realTranscript = (finalT + interimT).trim();
+        if (realTranscript.length > 0) {
+          dictateText.innerHTML = escapeHtml(realTranscript) + '<span class="caret"></span>';
+        }
+      };
+
+      recognition.onerror = (e) => {
+        console.warn('SpeechRecognition error:', e.error);
+        if (['not-allowed', 'service-not-allowed', 'network', 'audio-capture'].includes(e.error)) {
+          recognition = null;
+          usingRealMic = false;
+          if (!aborted && current === 'dictate') runSimulatedDictation();
+        }
+      };
+
+      recognition.onend = () => {
+        // Natural end (user released); endDictation handles routing
+      };
+
+      recognition.start();
+      usingRealMic = true;
+      return; // skip simulation
+    } catch (err) {
+      console.warn('SpeechRecognition init failed:', err);
+      recognition = null;
+      usingRealMic = false;
+    }
+  }
+
+  // Fallback: simulated typing of the canned query
+  runSimulatedDictation();
+}
+
+function runSimulatedDictation() {
+  dictateInterval = setInterval(() => {
+    if (aborted) return;
+    dictateIndex++;
+    const partial = DICTATION_QUERY.slice(0, dictateIndex);
+    dictateText.innerHTML = escapeHtml(partial) + '<span class="caret"></span>';
+    if (dictateIndex >= DICTATION_QUERY.length) {
+      clearInterval(dictateInterval);
+      dictateInterval = null;
+    }
+  }, 60);
+}
+
+function endDictation(cancel = false) {
+  if (dictateInterval) clearInterval(dictateInterval);
+  micStage.classList.remove('listening');
+
+  // Real-mic path
+  if (usingRealMic && recognition) {
+    try { recognition.stop(); } catch (e) {}
+    const captured = realTranscript;
+    recognition = null;
+    usingRealMic = false;
+    if (cancel || !captured) {
+      aborted = true;
+      show('search');
+      return;
+    }
+    query = captured;
+    renderQuery(queryText);
+    submitQuery(captured);
+    return;
+  }
+
+  // Simulated path
+  if (cancel) {
+    aborted = true;
+    show('search');
+    return;
+  }
+  query = DICTATION_QUERY;
+  renderQuery(queryText);
+  submitQuery(DICTATION_QUERY);
+}
+
+// Hold-to-dictate on the search top mic
+let isHolding = false;
+function holdStart(e) {
+  if (current !== 'search') return;
+  e.preventDefault();
+  isHolding = true;
+  startDictation();
+}
+function holdEnd(e) {
+  if (!isHolding) return;
+  isHolding = false;
+
+  // Real mic: just stop and route whatever was captured
+  if (usingRealMic) {
+    endDictation(false);
+    return;
+  }
+
+  // Simulated: accelerate typing to finish, then advance
+  const remaining = DICTATION_QUERY.length - dictateIndex;
+  if (remaining > 0) {
+    if (dictateInterval) clearInterval(dictateInterval);
+    const fast = setInterval(() => {
+      dictateIndex++;
+      const partial = DICTATION_QUERY.slice(0, dictateIndex);
+      dictateText.innerHTML = escapeHtml(partial) + '<span class="caret"></span>';
+      if (dictateIndex >= DICTATION_QUERY.length) {
+        clearInterval(fast);
+        setTimeout(() => endDictation(false), 350);
+      }
+    }, 22);
+  } else {
+    endDictation(false);
+  }
+}
+
+micTrigger.addEventListener('mousedown', holdStart);
+micTrigger.addEventListener('touchstart', holdStart, {passive:false});
+window.addEventListener('mouseup', holdEnd);
+window.addEventListener('touchend', holdEnd);
+
+// Click the big mic button in dictation to finish early
+micButton.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (current !== 'dictate') return;
+  if (usingRealMic) {
+    endDictation(false);
+    return;
+  }
+  // Simulated: skip to end
+  if (dictateInterval) clearInterval(dictateInterval);
+  dictateIndex = DICTATION_QUERY.length;
+  dictateText.innerHTML = escapeHtml(DICTATION_QUERY) + '<span class="caret"></span>';
+  setTimeout(() => endDictation(false), 200);
+});
+
+/* Hint toasts removed per spec */
+</script>
+</body>
+</html>
