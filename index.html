@@ -1,0 +1,1790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ask Fubo — Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Base ---------- */
+  *,*::before,*::after { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: #000;
+    color: #fff;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+  button { font-family: inherit; cursor: pointer; }
+
+  /* ---------- Stage (fills viewport, 16:9 TV) ---------- */
+  .stage {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+  }
+
+  /* ---------- Screens ---------- */
+  .screen {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 380ms ease;
+  }
+  .screen.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* =========================================================
+     HOME SCREEN
+     ========================================================= */
+  #home { background: #000; }
+
+  .home-sidebar {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 7vw;
+    min-width: 70px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2.3vh 0;
+    gap: 3.2vh;
+    z-index: 10;
+  }
+  .avatar {
+    width: 3.2vw; height: 3.2vw;
+    min-width: 36px; min-height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff8a65 0%, #ff5252 50%, #d84315 100%);
+    box-shadow: 0 2px 10px rgba(255,90,80,.3);
+  }
+  .side-icon {
+    width: 2.6vw; height: 2.6vw;
+    min-width: 30px; min-height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    color: #b8b8b8;
+    transition: all .2s ease;
+    cursor: pointer;
+  }
+  .side-icon svg { width: 60%; height: 60%; }
+  .side-icon.active {
+    background: #2a2a2a;
+    color: #fff;
+  }
+  .side-icon:hover { color: #fff; }
+
+  .home-content {
+    position: absolute;
+    left: 7vw;
+    top: 0; right: 0; bottom: 0;
+    padding: 3vh 0 0 1vw;
+  }
+
+  /* Top chip bar */
+  .chip-bar {
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+    padding-left: 2vw;   /* align with rail titles & cards */
+    padding-right: 2vw;
+    height: 6vh;
+    margin-bottom: 64px; /* exact spec — breathing room above first rail */
+  }
+  .chip {
+    height: 5.5vh;
+    min-height: 50px;
+    padding: 0 2.2vw;
+    border-radius: 999px;
+    background: #1c1c1c;
+    color: #fff;
+    font-size: clamp(14px, 1.5vw, 22px);
+    font-weight: 500;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    transition: transform .15s ease, background .2s ease;
+  }
+  .chip:hover { background: #2a2a2a; transform: scale(1.03); }
+  .chip.active { background: #fff; color: #000; }
+
+  .ask-fubo-chip {
+    position: relative;
+    padding: 0 1.8vw 0 1.6vw;
+    background: #000;
+    color: #fff;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    z-index: 1;
+    overflow: visible;
+  }
+  .ask-fubo-chip::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 999px;
+    padding: 2px;
+    background: linear-gradient(120deg,
+      #6366f1 0%, #a855f7 25%, #ec4899 50%, #f43f5e 75%, #a855f7 100%);
+    background-size: 220% 100%;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    animation: chip-gradient-drift 7s ease-in-out infinite;
+    z-index: -1;
+  }
+  .ask-fubo-chip::after {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 999px;
+    background: radial-gradient(closest-side, rgba(236,72,153,.20), transparent 75%);
+    filter: blur(10px);
+    z-index: -2;
+    opacity: .7;
+    pointer-events: none;
+  }
+  .ask-fubo-chip .sparkle {
+    width: 1.4vw; height: 1.4vw;
+    min-width: 18px; min-height: 18px;
+    margin-right: .6vw;
+    flex-shrink: 0;
+  }
+  @keyframes chip-gradient-drift {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+  .time-chip {
+    margin-left: auto;
+    background: #1c1c1c;
+    color: #fff;
+    height: 4vh; min-height: 36px;
+    padding: 0 1.2vw;
+    border-radius: 999px;
+    font-size: clamp(12px, 1.1vw, 16px);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Rails */
+  .rail {
+    padding-left: 1vw;
+  }
+  .rail + .rail {
+    margin-top: 3vh; /* spacing between rails (does not affect first rail) */
+  }
+  .rail-title {
+    font-size: clamp(16px, 1.55vw, 24px);
+    font-weight: 600;
+    margin: 0 0 1.3vh 0;
+    color: #fff;
+    padding-left: 1vw;
+  }
+  .rail-row {
+    display: flex;
+    gap: 1.1vw;
+    overflow: visible;          /* hover scale must not be clipped */
+    padding: 6px 2vw 1vh 1vw;   /* right breathing room so last card isn't flush */
+    scrollbar-width: none;
+  }
+  .rail-row::-webkit-scrollbar { display: none; }
+
+  .card {
+    flex: 0 0 auto;
+    width: 16vw;
+    min-width: 170px;           /* lower min so 5 cards still fit on narrower windows */
+    border-radius: 14px;
+    overflow: visible;          /* let hover scale render past edges */
+    position: relative;
+    cursor: pointer;
+    transition: transform .2s ease;
+  }
+  .card:hover { transform: translateY(-3px) scale(1.02); }
+
+  .card-img {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: #222;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-time {
+    position: absolute;
+    top: 8px; left: 8px;
+    background: rgba(28,28,28,.95);
+    color: #fff;
+    font-size: clamp(11px, .85vw, 14px);
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: 999px;
+    z-index: 2;
+  }
+  .card-tag {
+    position: absolute;
+    top: 8px; left: 8px;
+    background: rgba(28,28,28,.85);
+    color: #cfcfcf;
+    font-size: clamp(9px, .7vw, 12px);
+    font-weight: 500;
+    padding: 3px 7px;
+    border-radius: 4px;
+    z-index: 2;
+  }
+  .card-title {
+    font-size: clamp(13px, 1.05vw, 17px);
+    font-weight: 600;
+    margin: .9vh 0 .25vh 0;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .card-sub {
+    font-size: clamp(11px, .9vw, 14px);
+    color: #9a9a9a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Sport card backgrounds */
+  .bg-usopen {
+    background:
+      linear-gradient(180deg, rgba(0,0,0,.4) 0%, rgba(0,0,0,0) 35%, rgba(0,0,0,.45) 100%),
+      linear-gradient(180deg, #1b3868 0%, #366aa9 45%, #2b5681 80%, #14304a 100%);
+  }
+  .bg-usopen::after {
+    content: "us open";
+    position: absolute;
+    top: 30%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+    font-weight: 800;
+    font-size: clamp(20px, 2vw, 32px);
+    color: #ffd400;
+    letter-spacing: -.04em;
+  }
+  .bg-wisla {
+    background: linear-gradient(90deg, #1d4d9e 0% 50%, #4ea246 50% 100%);
+    position: relative;
+  }
+  .bg-wisla::before, .bg-wisla::after {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 35%; height: 70%;
+    border-radius: 50%;
+    background: rgba(255,255,255,.18);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:clamp(10px, .9vw, 14px); color:#fff;
+    text-align:center;
+  }
+  .bg-wisla::before { content: "WISŁA"; left: 8%; background:#fff; color:#1d4d9e; }
+  .bg-wisla::after { content: "ZL"; right: 8%; background:#ff7e1a; color:#fff; }
+
+  .bg-billiards {
+    background:
+      radial-gradient(circle at 30% 40%, #ed4040 0%, transparent 25%),
+      radial-gradient(circle at 65% 55%, #ffd400 0%, transparent 22%),
+      radial-gradient(circle at 50% 70%, #2c7eff 0%, transparent 22%),
+      radial-gradient(circle at 80% 35%, #4caf50 0%, transparent 20%),
+      linear-gradient(135deg, #0a1f0f 0%, #1a4a2a 100%);
+  }
+  .bg-billiards::after {
+    content: "BILLIARDS";
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-weight: 900;
+    font-size: clamp(18px, 1.9vw, 28px);
+    color: #ffd400;
+    -webkit-text-stroke: 2px #b00;
+    letter-spacing: 0;
+  }
+  .bg-newcastle {
+    background: linear-gradient(90deg, #2c3138 0% 50%, #c8102e 50% 100%);
+    position: relative;
+  }
+  .bg-newcastle::before, .bg-newcastle::after {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    width: 30%; height: 65%;
+    border-radius: 8px;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; font-size:clamp(10px, .8vw, 14px);
+    text-align:center;
+  }
+  .bg-newcastle::before { content: "NUFC"; left: 10%; color:#fff; background:rgba(255,255,255,.15); }
+  .bg-newcastle::after { content: "LFC"; right: 10%; color:#fff; background:rgba(255,255,255,.18); }
+
+  .bg-kansas {
+    background: linear-gradient(135deg, #afb52a 0%, #859b1f 100%);
+  }
+  .bg-kansas::after {
+    content: "KU";
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    font-weight: 900;
+    font-size: clamp(28px, 3vw, 48px);
+    color: #0051ba;
+    text-shadow: 2px 2px 0 #fff;
+  }
+
+  /* MLB / NHL / NCAA card backgrounds */
+  .bg-dbacks {
+    background: linear-gradient(120deg, #a71930 0%, #5c0e1c 100%);
+  }
+  .bg-dbacks::after {
+    content: "A";
+    position: absolute;
+    top: 50%; right: 12%;
+    transform: translateY(-50%);
+    font-weight: 900;
+    font-size: clamp(40px, 4vw, 70px);
+    color: #fff;
+    font-style: italic;
+  }
+  .bg-tigers { background: linear-gradient(135deg, #f4640a 0%, #d04600 100%); }
+  .bg-tigers::after {
+    content: "D";
+    position: absolute;
+    top: 50%; right: 12%;
+    transform: translateY(-50%);
+    font-weight: 900;
+    font-size: clamp(45px, 4.5vw, 78px);
+    color: #fff;
+    font-style: italic;
+  }
+  .bg-astros { background: linear-gradient(135deg, #002d62 0%, #001838 100%); }
+  .bg-astros::after {
+    content: "H";
+    position: absolute;
+    top: 50%; right: 14%;
+    transform: translateY(-50%);
+    font-weight: 900;
+    font-size: clamp(40px, 4vw, 70px);
+    color: #eb6e1f;
+  }
+  .bg-vegas { background: linear-gradient(135deg, #2c4138 0%, #1a2620 100%); }
+  .bg-vegas::after {
+    content: "V";
+    position: absolute;
+    top: 50%; right: 14%;
+    transform: translateY(-50%);
+    font-weight: 900;
+    font-size: clamp(40px, 4vw, 70px);
+    color: #b4975a;
+  }
+  .bg-illinois { background: linear-gradient(135deg, #13294b 0%, #0a1730 100%); }
+  .bg-illinois::after {
+    content: "I";
+    position: absolute;
+    top: 50%; right: 18%;
+    transform: translateY(-50%);
+    font-weight: 900;
+    font-size: clamp(40px, 4vw, 70px);
+    color: #e84a27;
+  }
+
+  .news-card .card-title {
+    position: absolute;
+    top: 32%; left: 10px;
+    font-size: clamp(12px, 1vw, 16px);
+    line-height: 1.15;
+    color: #fff;
+    z-index: 2;
+    max-width: 55%;
+    text-shadow: 0 1px 4px rgba(0,0,0,.35);
+    white-space: normal;
+  }
+
+  /* =========================================================
+     SEARCH SCREEN
+     ========================================================= */
+  .search-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(80% 70% at 0% 0%, #2b3da4 0%, transparent 50%),
+      radial-gradient(80% 70% at 100% 100%, #c63d3d 0%, transparent 55%),
+      linear-gradient(135deg, #0c1230 0%, #421a2a 100%);
+  }
+
+  .search-top {
+    position: absolute;
+    top: 5vh; left: 4vw; right: 4vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 5;
+  }
+  .search-icon-large {
+    display: flex; align-items: center; gap: 1.2vw;
+    color: #fff;
+  }
+  .search-icon-large svg {
+    width: 3.2vw; height: 3.2vw;
+    min-width: 36px; min-height: 36px;
+  }
+  .search-query {
+    font-size: clamp(20px, 2.2vw, 36px);
+    font-weight: 700;
+    color: #fff;
+    min-height: 1.1em;
+    letter-spacing: -.01em;
+  }
+  .search-query .caret {
+    display: inline-block;
+    width: .12em;
+    height: 1em;
+    background: #fff;
+    vertical-align: -.15em;
+    margin-left: .05em;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .hold-dictate {
+    font-size: clamp(14px, 1.3vw, 20px);
+    color: rgba(255,255,255,.85);
+    display: flex; align-items: center; gap: .6vw;
+  }
+  .mic-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2vw; height: 2vw;
+    min-width: 26px; min-height: 26px;
+    background: rgba(255,255,255,.18);
+    border-radius: 50%;
+    transition: all .2s ease;
+  }
+  .mic-pill svg { width: 60%; height: 60%; color: #fff; }
+  .hold-dictate.armable { cursor: pointer; }
+  .hold-dictate.armable:hover .mic-pill { background: rgba(255,255,255,.35); transform: scale(1.05); }
+
+  /* Keyboard */
+  .keyboard {
+    position: absolute;
+    top: 14vh;
+    left: 4vw; right: 4vw;
+    display: flex;
+    align-items: center;
+    gap: .8vw;
+    flex-wrap: nowrap;
+    z-index: 5;
+  }
+  .key {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,.85);
+    font-size: clamp(18px, 1.8vw, 30px);
+    font-weight: 400;
+    padding: .8vh 0;
+    min-width: 2.5vw;
+    text-align: center;
+    transition: all .15s ease;
+    border-radius: 8px;
+    flex: 1 1 auto;
+  }
+  .key:hover {
+    color: #fff;
+    background: rgba(255,255,255,.12);
+    transform: scale(1.1);
+  }
+  .key.special {
+    background: rgba(255,255,255,.12);
+    color: #fff;
+    font-size: clamp(11px, 1vw, 16px);
+    font-weight: 600;
+    padding: .8vh 1vw;
+    min-width: 3.5vw;
+    flex: 0 0 auto;
+  }
+  .key.special:hover {
+    background: rgba(255,255,255,.25);
+  }
+  .key.pressed {
+    background: rgba(255,255,255,.4);
+    color: #fff;
+  }
+
+  .keyboard-divider {
+    position: absolute;
+    top: 21vh;
+    left: 4vw; right: 4vw;
+    height: 1px;
+    background: rgba(255,255,255,.15);
+    z-index: 4;
+  }
+
+  /* Suggestion chips */
+  .suggestions {
+    position: absolute;
+    top: 23vh;
+    left: 4vw; right: 4vw;
+    display: flex;
+    gap: 1vw;
+    flex-wrap: nowrap;
+    overflow: visible;       /* allow hover scale to render fully */
+    padding: 6px 0;          /* extra breathing room top/bottom */
+    z-index: 5;
+  }
+  .suggestion {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,.5);
+    color: rgba(255,255,255,.92);
+    border-radius: 999px;
+    padding: .85vh 1.3vw;
+    font-size: clamp(11px, .9vw, 15px);
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all .2s ease;
+  }
+  .suggestion:hover {
+    background: rgba(255,255,255,.18);
+    transform: scale(1.025);
+  }
+
+  /* Ask Fubo center text */
+  .center-stack {
+    position: absolute;
+    left: 50%;
+    top: 58%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 3;
+  }
+  .center-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .5vw;
+    background: rgba(0,0,0,.3);
+    border: 1px solid rgba(255,255,255,.22);
+    padding: .6vh 1.1vw;
+    border-radius: 999px;
+    margin-bottom: 2vh;
+  }
+  .center-badge .sparkle {
+    width: 1.1vw; height: 1.1vw;
+    min-width: 16px; min-height: 16px;
+  }
+  .center-badge-label {
+    font-size: clamp(13px, 1.1vw, 18px);
+    font-weight: 500;
+  }
+  .center-badge-beta {
+    margin-left: .35vw;
+    font-size: clamp(9px, .7vw, 12px);
+    font-weight: 600;
+    color: #fff;
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.3);
+    padding: 2px 7px;
+    border-radius: 6px;
+  }
+  .center-title {
+    font-size: clamp(28px, 4.4vw, 78px);
+    font-weight: 700;
+    line-height: 1.06;
+    color: #fff;
+    letter-spacing: -.025em;
+    margin: 0;
+  }
+
+  /* =========================================================
+     DICTATION STATE
+     ========================================================= */
+  .mic-stage {
+    position: absolute;
+    left: 50%;
+    top: 60%;
+    transform: translate(-50%, -50%);
+    width: 38vw;
+    height: 38vw;
+    max-width: 540px;
+    max-height: 540px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .mic-button {
+    position: relative;
+    width: 8vw; height: 8vw;
+    min-width: 100px; min-height: 100px;
+    max-width: 140px; max-height: 140px;
+    border-radius: 50%;
+    background: #fff;
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 5;
+    pointer-events: auto;
+    cursor: pointer;
+    box-shadow: 0 0 0 0 rgba(255,255,255,0);
+    transition: box-shadow .2s ease, transform .15s ease;
+  }
+  .mic-button.idle { background: #fff; }
+  .mic-button.idle:hover { transform: scale(1.05); }
+  .mic-button.active {
+    background: #fff;
+    animation: mic-bob 1.4s ease-in-out infinite;
+  }
+  @keyframes mic-bob {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.06); }
+  }
+  .mic-button svg {
+    width: 50%; height: 50%;
+    color: #1a1a1a;
+  }
+  .mic-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,.45);
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .mic-stage.listening .mic-ring {
+    animation: ripple 2.4s cubic-bezier(.2,.7,.3,1) infinite;
+  }
+  .mic-stage.listening .mic-ring:nth-child(2) { animation-delay: .4s; }
+  .mic-stage.listening .mic-ring:nth-child(3) { animation-delay: .8s; }
+  .mic-stage.listening .mic-ring:nth-child(4) { animation-delay: 1.2s; }
+  .mic-stage.listening .mic-ring:nth-child(5) { animation-delay: 1.6s; }
+  .mic-stage.listening .mic-ring:nth-child(6) { animation-delay: 2.0s; }
+  @keyframes ripple {
+    0%   { opacity: 0; transform: scale(.25); border-color: rgba(255,255,255,.7); }
+    20%  { opacity: 1; }
+    100% { opacity: 0; transform: scale(1.15); border-color: rgba(255,255,255,.05); }
+  }
+
+  /* =========================================================
+     THINKING / RESULTS COMMON
+     ========================================================= */
+  .results-bg {
+    position: absolute; inset: 0;
+    overflow: hidden;
+    background: linear-gradient(135deg, #0c1230 0%, #2a1418 100%);
+  }
+  .results-bg::before,
+  .results-bg::after {
+    content: "";
+    position: absolute;
+    width: 90%; height: 90%;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: .8;
+    pointer-events: none;
+  }
+  .results-bg::before {
+    top: -25%; left: -20%;
+    background: radial-gradient(circle, #2b3da4 0%, rgba(43,61,164,.2) 50%, transparent 70%);
+    animation: orb-drift-blue 18s ease-in-out infinite;
+  }
+  .results-bg::after {
+    bottom: -25%; right: -20%;
+    background: radial-gradient(circle, #c63d3d 0%, rgba(198,61,61,.2) 50%, transparent 70%);
+    animation: orb-drift-red 22s ease-in-out infinite;
+  }
+  @keyframes orb-drift-blue {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%      { transform: translate(8vw, 6vh) scale(1.1); }
+    66%      { transform: translate(-4vw, 12vh) scale(.95); }
+  }
+  @keyframes orb-drift-red {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    33%      { transform: translate(-7vw, -5vh) scale(1.08); }
+    66%      { transform: translate(4vw, -10vh) scale(.96); }
+  }
+  .close-btn {
+    position: absolute;
+    top: 4vh; right: 4vw;
+    display: inline-flex;
+    align-items: center;
+    gap: .55vw;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: clamp(14px, 1.3vw, 22px);
+    font-weight: 700;
+    padding: 1vh 1.4vw;
+    border-radius: 999px;
+    transition: background .2s ease;
+    z-index: 10;
+  }
+  .close-btn:hover { background: rgba(255,255,255,.13); }
+  .close-btn svg { width: 1.4vw; height: 1.4vw; min-width: 18px; min-height: 18px; }
+
+  /* Vertical layout stack for results / thinking screens */
+  .layout-stack {
+    position: absolute;
+    inset: 5vh 0 5vh 5vw;   /* no right padding — cards bleed off right edge */
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+    overflow: visible;
+  }
+  .layout-stack > * { pointer-events: auto; }
+  .layout-stack > * + * { margin-top: 64px; }
+
+  .status-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1vh;
+  }
+  .status-dots {
+    display: flex;
+    align-items: center;
+    gap: .55vw;
+    font-size: clamp(13px, 1.2vw, 20px);
+    color: rgba(255,255,255,.85);
+    font-weight: 500;
+  }
+  .dot {
+    width: .8vw; height: .8vw;
+    min-width: 10px; min-height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.4);
+  }
+  .dot.b { background: #4f46e5; }
+  .dot.r { background: #ec4444; }
+  .status-headline {
+    font-size: clamp(22px, 2.2vw, 38px);
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -.015em;
+    margin: 0;
+    max-width: 70vw;
+  }
+
+  /* Card row (results / thinking) */
+  .result-row {
+    display: flex;
+    gap: 1.6vw;
+    padding: 8px 0; /* room for the focused outline ring */
+    /* overflow: visible — never clip the focused ring */
+  }
+  .result-card {
+    flex: 0 0 auto;
+    width: 17vw;
+    min-width: 220px;
+    aspect-ratio: 9 / 16;
+    max-height: 60vh;
+    border-radius: 18px;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    transition: transform .25s ease;
+  }
+  .result-card:hover { transform: translateY(-4px); }
+
+  /* Thinking placeholders — flat white at low opacity.
+     Higher-specificity selector beats `.result-card { background-color: #1a1a1a }`
+     defined later in the cascade. */
+  .result-card.placeholder {
+    background-color: rgba(255, 255, 255, 0.18);
+    background-image: none;
+    position: relative;
+    overflow: hidden;
+  }
+  .result-card.placeholder::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg,
+      transparent 35%,
+      rgba(255,255,255,.12) 50%,
+      transparent 65%);
+    transform: translateX(-100%);
+    animation: shimmer 1.8s infinite;
+  }
+  @keyframes shimmer {
+    to { transform: translateX(100%); }
+  }
+
+  /* Result cards (photo-style) */
+  .result-card {
+    background-color: #1a1a1a;
+  }
+  .result-card .card-photo {
+    position: absolute; inset: 0;
+    background-size: cover;
+    background-position: center;
+    transition: transform .4s ease;
+  }
+  .result-card:hover .card-photo {
+    transform: scale(1.05);
+  }
+  .result-card .gradient-overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 45%, rgba(0,0,0,.9) 100%);
+    pointer-events: none;
+  }
+  .result-card .card-label {
+    position: absolute;
+    left: 1.1vw; right: 1.1vw; bottom: 1.6vh;
+    color: #fff;
+    font-size: clamp(13px, 1.05vw, 18px);
+    font-weight: 600;
+    line-height: 1.2;
+    z-index: 2;
+    text-shadow: 0 1px 4px rgba(0,0,0,.45);
+  }
+  .result-card.focused {
+    outline: 2.5px solid #fff;
+    outline-offset: 4px;
+    border-radius: 18px;
+  }
+
+  /* Themed gradient fallbacks per topic (shown if photo doesn't load) */
+  .theme-patriots-1 { background: linear-gradient(160deg, #002244 0%, #c60c30 60%, #b0b7bc 100%); }
+  .theme-patriots-2 { background: linear-gradient(180deg, #c60c30 0%, #002244 80%); }
+  .theme-patriots-3 { background: linear-gradient(160deg, #1a3d6e 0%, #4a7d3a 70%, #1a2a1a 100%); }
+  .theme-patriots-4 { background: linear-gradient(170deg, #002244 0%, #4a4f55 60%, #002244 100%); }
+  .theme-patriots-5 { background: linear-gradient(160deg, #b0b7bc 0%, #c60c30 70%, #002244 100%); }
+  .theme-brazil-1 { background: linear-gradient(180deg, #1c5e26 0%, #ffd400 60%, #0d3210 100%); }
+  .theme-brazil-2 { background: linear-gradient(160deg, #0f3b8a 0%, #ffd400 65%, #006432 100%); }
+  .theme-brazil-3 { background: linear-gradient(180deg, #0a1f3d 0%, #006432 55%, #ffd400 100%); }
+  .theme-brazil-4 { background: linear-gradient(160deg, #003063 0%, #ffd400 70%, #d70022 100%); }
+  .theme-brazil-5 { background: linear-gradient(170deg, #2c7d2c 0%, #ffd400 65%, #1a3d1a 100%); }
+  .theme-ohtani-1 { background: linear-gradient(160deg, #005a9c 0%, #ef3e42 100%); }
+  .theme-ohtani-2 { background: linear-gradient(170deg, #ef3e42 0%, #005a9c 100%); }
+  .theme-ohtani-3 { background: linear-gradient(160deg, #1c2c5b 0%, #b0b7bc 100%); }
+  .theme-ohtani-4 { background: linear-gradient(180deg, #005a9c 0%, #1c2c5b 100%); }
+  .theme-ohtani-5 { background: linear-gradient(160deg, #ef3e42 0%, #8b1a1f 100%); }
+  .theme-nfl-1 { background: linear-gradient(160deg, #002c5f 0%, #a71930 100%); }
+  .theme-nfl-2 { background: linear-gradient(170deg, #4f2683 0%, #ffc62f 100%); }
+  .theme-nfl-3 { background: linear-gradient(160deg, #006338 0%, #ffb612 100%); }
+  .theme-nfl-4 { background: linear-gradient(180deg, #00338d 0%, #002244 100%); }
+  .theme-nfl-5 { background: linear-gradient(160deg, #013369 0%, #d50a0a 100%); }
+  .theme-premier-1 { background: linear-gradient(160deg, #ef0107 0%, #023474 100%); }
+  .theme-premier-2 { background: linear-gradient(170deg, #6caee0 0%, #034694 100%); }
+  .theme-premier-3 { background: linear-gradient(160deg, #c8102e 0%, #1b458f 100%); }
+  .theme-premier-4 { background: linear-gradient(180deg, #132257 0%, #ef0107 100%); }
+  .theme-premier-5 { background: linear-gradient(160deg, #6cabdd 0%, #1c2c5b 100%); }
+
+  /* "Was it helpful?" feedback row */
+  .feedback-row {
+    display: flex;
+    align-items: center;
+    gap: 1vw;
+    z-index: 10;
+  }
+  .feedback-label {
+    font-size: clamp(13px, 1.15vw, 20px);
+    color: rgba(255,255,255,.92);
+    font-weight: 500;
+    margin-right: .3vw;
+  }
+  .feedback-btn {
+    width: 3vw; height: 3vw;
+    min-width: 40px; min-height: 40px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,.5);
+    background: transparent;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .2s ease;
+  }
+  .feedback-btn:hover {
+    background: rgba(255,255,255,.15);
+    border-color: rgba(255,255,255,.85);
+    transform: scale(1.05);
+  }
+  .feedback-btn svg {
+    width: 55%; height: 55%;
+  }
+  .feedback-btn.rated-up   { background: rgba(74,222,128,.25); border-color: #4ade80; }
+  .feedback-btn.rated-down { background: rgba(248,113,113,.25); border-color: #f87171; }
+  .feedback-thanks {
+    margin-left: .6vw;
+    font-size: clamp(13px, 1.1vw, 18px);
+    color: rgba(255,255,255,.85);
+    opacity: 0;
+    transition: opacity .3s ease;
+  }
+  .feedback-thanks.show { opacity: 1; }
+
+  /* Toast hint */
+  .hint {
+    position: fixed;
+    bottom: 2.5vh;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,.1);
+    color: #fff;
+    padding: 1vh 1.8vw;
+    border-radius: 999px;
+    font-size: clamp(11px, .95vw, 14px);
+    font-weight: 500;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,.15);
+    z-index: 100;
+    opacity: 0;
+    transition: opacity .4s ease;
+    pointer-events: none;
+  }
+  .hint.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- ============================================================
+       HOME SCREEN
+       ============================================================ -->
+  <div class="screen active" id="home">
+    <aside class="home-sidebar">
+      <div class="avatar"></div>
+      <div class="side-icon" title="Search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+        </svg>
+      </div>
+      <div class="side-icon" title="Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/>
+        </svg>
+      </div>
+      <div class="side-icon" title="Guide">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M9 5v14"/>
+        </svg>
+      </div>
+      <div class="side-icon" title="Recordings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <rect x="4" y="6" width="16" height="14" rx="2"/><path d="M8 3l4 3 4-3"/>
+        </svg>
+      </div>
+      <div class="side-icon active" title="Sports">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <path d="M6 4h12v3a4 4 0 01-4 4h-4a4 4 0 01-4-4V4z"/>
+          <path d="M6 6H4v2a3 3 0 003 3M18 6h2v2a3 3 0 01-3 3"/>
+          <path d="M12 11v6M8 19h8"/>
+        </svg>
+      </div>
+      <div class="side-icon" title="On now">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <rect x="3" y="5" width="18" height="13" rx="2"/><polygon fill="currentColor" stroke="none" points="10,9 16,12 10,15"/>
+        </svg>
+      </div>
+      <div class="side-icon" title="Movies">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+          <rect x="3" y="4" width="18" height="16" rx="2"/>
+          <path d="M7 4v16M17 4v16M3 8h4M3 12h4M3 16h4M17 8h4M17 12h4M17 16h4"/>
+        </svg>
+      </div>
+    </aside>
+
+    <div class="home-content">
+      <div class="chip-bar">
+        <button class="chip ask-fubo-chip" id="askFuboChip">
+          <svg class="sparkle" viewBox="0 0 24 24" fill="#fff">
+            <path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4L12 2z"/>
+          </svg>
+          Ask Fubo
+        </button>
+        <button class="chip active">All</button>
+        <button class="chip">Soccer</button>
+        <button class="chip">Football</button>
+        <button class="chip">Basketball</button>
+        <button class="chip">Hockey</button>
+        <button class="chip">Golf</button>
+        <button class="chip">Baseball</button>
+        <button class="chip">Racing</button>
+        <button class="chip">Tennis</button>
+        <span class="time-chip">12:30pm</span>
+      </div>
+
+      <div class="rail">
+        <h2 class="rail-title">Popular sports</h2>
+        <div class="rail-row">
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img bg-usopen">
+              <span class="card-time">3:30pm</span>
+            </div>
+            <div class="card-title">Men's Women's First Round</div>
+            <div class="card-sub">US Open Tennis</div>
+          </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img bg-wisla">
+              <span class="card-time">3:30pm</span>
+            </div>
+            <div class="card-title">Wisla Plock vs Zaglebie Lu…</div>
+            <div class="card-sub">Ekstraklasa Soccer</div>
+          </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img bg-billiards">
+              <span class="card-time">3:30pm</span>
+            </div>
+            <div class="card-title">2025 Women's Profession…</div>
+            <div class="card-sub">Billiards</div>
+          </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img bg-newcastle">
+              <span class="card-time">3:30pm</span>
+            </div>
+            <div class="card-title">Newcastle United FC vs Li…</div>
+            <div class="card-sub">English Premier League</div>
+          </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img bg-kansas">
+              <span class="card-time">3:30pm</span>
+            </div>
+            <div class="card-title">Kansas at…</div>
+            <div class="card-sub">Women's College</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rail">
+        <h2 class="rail-title">Sports roundup</h2>
+        <div class="rail-row">
+          <div class="card news-card" onclick="goToSearch()">
+            <div class="card-img bg-dbacks">
+              <span class="card-tag">MLB News</span>
+              <div class="card-title">Mets @ Dbacks Preview</div>
+            </div>
+          </div>
+          <div class="card news-card" onclick="goToSearch()">
+            <div class="card-img bg-tigers">
+              <span class="card-tag">MLB News</span>
+              <div class="card-title">Tigers vs Rangers Highlights</div>
+            </div>
+          </div>
+          <div class="card news-card" onclick="goToSearch()">
+            <div class="card-img bg-astros">
+              <span class="card-tag">MLB News</span>
+              <div class="card-title">Astros vs Reds Highlights</div>
+            </div>
+          </div>
+          <div class="card news-card" onclick="goToSearch()">
+            <div class="card-img bg-vegas">
+              <span class="card-tag">NHL News</span>
+              <div class="card-title">Skinner Highlights</div>
+            </div>
+          </div>
+          <div class="card news-card" onclick="goToSearch()">
+            <div class="card-img bg-illinois">
+              <span class="card-tag">NCAAFB News</span>
+              <div class="card-title">Illinois Football Analysis</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="rail">
+        <h2 class="rail-title">Where you left off</h2>
+        <div class="rail-row">
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img" style="background:linear-gradient(135deg,#1d4d9e 0%,#0a2d65 100%);">
+              <span class="card-time">2:15pm</span>
+            </div>
+          </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img" style="background:linear-gradient(135deg,#c8102e 0%,#7a0a1f 100%);">
+              <span class="card-time">1:45pm</span>
+            </div>
+          </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img" style="background:linear-gradient(135deg,#3e2723 0%,#1a0e0a 100%);">
+              <span class="card-time">11:30am</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       SEARCH SCREEN
+       ============================================================ -->
+  <div class="screen" id="search">
+    <div class="search-bg"></div>
+
+    <div class="search-top">
+      <div class="search-icon-large">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+        </svg>
+        <span class="search-query" id="queryText"><span class="caret"></span></span>
+      </div>
+      <div class="hold-dictate armable" id="micTrigger">
+        <span>Hold</span>
+        <span class="mic-pill">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <rect x="9" y="3" width="6" height="12" rx="3"/>
+            <path d="M5 11a7 7 0 0014 0M12 18v3" stroke="currentColor" stroke-width="2" fill="none"/>
+          </svg>
+        </span>
+        <span>to dictate</span>
+      </div>
+    </div>
+
+    <div class="keyboard" id="keyboard">
+      <button class="key special" data-key="123">123</button>
+      <button class="key special" data-key=" ">SPACE</button>
+      <button class="key" data-key="a">a</button>
+      <button class="key" data-key="b">b</button>
+      <button class="key" data-key="c">c</button>
+      <button class="key" data-key="d">d</button>
+      <button class="key" data-key="e">e</button>
+      <button class="key" data-key="f">f</button>
+      <button class="key" data-key="g">g</button>
+      <button class="key" data-key="h">h</button>
+      <button class="key" data-key="i">i</button>
+      <button class="key" data-key="j">j</button>
+      <button class="key" data-key="k">k</button>
+      <button class="key" data-key="l">l</button>
+      <button class="key" data-key="m">m</button>
+      <button class="key" data-key="n">n</button>
+      <button class="key" data-key="o">o</button>
+      <button class="key" data-key="p">p</button>
+      <button class="key" data-key="q">q</button>
+      <button class="key" data-key="r">r</button>
+      <button class="key" data-key="s">s</button>
+      <button class="key" data-key="t">t</button>
+      <button class="key" data-key="u">u</button>
+      <button class="key" data-key="v">v</button>
+      <button class="key" data-key="w">w</button>
+      <button class="key" data-key="x">x</button>
+      <button class="key" data-key="y">y</button>
+      <button class="key" data-key="z">z</button>
+      <button class="key special" data-key="BACK" title="Delete">
+        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px;vertical-align:middle">
+          <path d="M21 5H8L2 12l6 7h13a2 2 0 002-2V7a2 2 0 00-2-2zM18 9l-6 6m0-6l6 6" stroke="#fff" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="keyboard-divider"></div>
+
+    <div class="suggestions">
+      <button class="suggestion" onclick="useSuggestion(this)">All Ohtani at-bats last night</button>
+      <button class="suggestion" onclick="useSuggestion(this)">Best plays from last night's NFL games</button>
+      <button class="suggestion" onclick="useSuggestion(this)">Red cards in the Premier League this season</button>
+    </div>
+
+    <div class="center-stack" id="centerStack">
+      <div class="center-badge">
+        <svg class="sparkle" viewBox="0 0 24 24" fill="#fff">
+          <path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4L12 2z"/>
+        </svg>
+        <span class="center-badge-label">Ask Fubo</span>
+        <span class="center-badge-beta">BETA</span>
+      </div>
+      <h1 class="center-title">Ask about your favorite<br>sports highlights</h1>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       DICTATION STATE (overlay on search bg)
+       ============================================================ -->
+  <div class="screen" id="dictate">
+    <div class="search-bg"></div>
+
+    <div class="search-top">
+      <div class="search-icon-large">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+        </svg>
+        <span class="search-query" id="dictateText"><span class="caret"></span></span>
+      </div>
+      <div class="hold-dictate">
+        <span>Hold</span>
+        <span class="mic-pill">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <rect x="9" y="3" width="6" height="12" rx="3"/>
+            <path d="M5 11a7 7 0 0014 0M12 18v3" stroke="currentColor" stroke-width="2" fill="none"/>
+          </svg>
+        </span>
+        <span>to dictate</span>
+      </div>
+    </div>
+
+    <div class="keyboard" id="keyboardGhost" style="opacity:.35;pointer-events:none">
+      <button class="key special">123</button>
+      <button class="key special">SPACE</button>
+      <button class="key">a</button><button class="key">b</button><button class="key">c</button>
+      <button class="key">d</button><button class="key">e</button><button class="key">f</button>
+      <button class="key">g</button><button class="key">h</button><button class="key">i</button>
+      <button class="key">j</button><button class="key">k</button><button class="key">l</button>
+      <button class="key">m</button><button class="key">n</button><button class="key">o</button>
+      <button class="key">p</button><button class="key">q</button><button class="key">r</button>
+      <button class="key">s</button><button class="key">t</button><button class="key">u</button>
+      <button class="key">v</button><button class="key">w</button><button class="key">x</button>
+      <button class="key">y</button><button class="key">z</button>
+      <button class="key special">⌫</button>
+    </div>
+    <div class="keyboard-divider"></div>
+
+    <div class="mic-stage" id="micStage">
+      <div class="mic-ring"></div>
+      <div class="mic-ring"></div>
+      <div class="mic-ring"></div>
+      <div class="mic-ring"></div>
+      <div class="mic-ring"></div>
+      <div class="mic-ring"></div>
+      <button class="mic-button active" id="micButton">
+        <svg viewBox="0 0 24 24" fill="currentColor">
+          <rect x="9" y="3" width="6" height="12" rx="3"/>
+          <path d="M5 11a7 7 0 0014 0M12 18v3" stroke="currentColor" stroke-width="2" fill="none"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       THINKING STATE
+       ============================================================ -->
+  <div class="screen" id="thinking">
+    <div class="results-bg"></div>
+    <button class="close-btn" onclick="goHome()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M9 14l-4-4 4-4M5 10h11a4 4 0 010 8h-2"/>
+      </svg>
+      Close
+    </button>
+    <div class="layout-stack">
+      <div class="status-row">
+        <div class="status-dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span> Thinking…</div>
+        <h2 class="status-headline">Looking through our library….</h2>
+      </div>
+      <div class="result-row">
+        <div class="result-card placeholder"></div>
+        <div class="result-card placeholder"></div>
+        <div class="result-card placeholder"></div>
+        <div class="result-card placeholder"></div>
+        <div class="result-card placeholder"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       RESULTS STATE
+       ============================================================ -->
+  <div class="screen" id="results">
+    <div class="results-bg"></div>
+    <button class="close-btn" onclick="goHome()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M9 14l-4-4 4-4M5 10h11a4 4 0 010 8h-2"/>
+      </svg>
+      Close
+    </button>
+    <div class="layout-stack">
+      <div class="status-row">
+        <div class="status-dots">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span id="resultStatusText">5 clips found</span>
+        </div>
+        <h2 class="status-headline" id="resultsHeadline">Here are Patriots touchdowns from yesterday's game</h2>
+      </div>
+
+      <div class="result-row" id="resultsCards">
+        <!-- Cards rendered dynamically based on query topic -->
+      </div>
+
+      <div class="feedback-row">
+        <span class="feedback-label">Was it helpful?</span>
+        <button class="feedback-btn" id="thumbUp" onclick="rateFeedback('up')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M7 11v10H4a1 1 0 01-1-1v-8a1 1 0 011-1h3z"/>
+            <path d="M7 11l4-8c1.5 0 2.5 1 2.5 2.5V9h5.5a2 2 0 012 2.3l-1.4 7A2 2 0 0117.6 20H7"/>
+          </svg>
+        </button>
+        <button class="feedback-btn" id="thumbDown" onclick="rateFeedback('down')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 13V3h3a1 1 0 011 1v8a1 1 0 01-1 1h-3z"/>
+            <path d="M17 13l-4 8c-1.5 0-2.5-1-2.5-2.5V15H5a2 2 0 01-2-2.3l1.4-7A2 2 0 016.4 4H17"/>
+          </svg>
+        </button>
+        <span class="feedback-thanks" id="feedbackThanks">Thanks for the feedback</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hint toast -->
+  <div class="hint" id="hint">Tip: Click "Ask Fubo" to start. Type letters or hold the mic.</div>
+
+</div>
+
+<script>
+/* =========================================================
+   State management
+   ========================================================= */
+const screens = {
+  home:     document.getElementById('home'),
+  search:   document.getElementById('search'),
+  dictate:  document.getElementById('dictate'),
+  thinking: document.getElementById('thinking'),
+  results:  document.getElementById('results'),
+};
+let current = 'home';
+
+function show(name) {
+  if (!screens[name]) return;
+  screens[current].classList.remove('active');
+  screens[name].classList.add('active');
+  current = name;
+}
+
+/* =========================================================
+   HOME -> SEARCH
+   ========================================================= */
+const askChip = document.getElementById('askFuboChip');
+askChip.addEventListener('click', goToSearch);
+
+function goToSearch() {
+  resetQuery();
+  show('search');
+  const micNote = (SpeechRecognition && location.protocol !== 'file:')
+    ? 'hold the mic to actually talk'
+    : 'hold the mic for demo dictation';
+  showHint('Type "Patriots" / "Ohtani", click a suggestion, or ' + micNote);
+}
+
+function goHome() {
+  show('home');
+}
+
+/* =========================================================
+   Keyboard
+   ========================================================= */
+const queryText = document.getElementById('queryText');
+let query = "";
+
+function renderQuery(el) {
+  el.innerHTML = escapeHtml(query) + '<span class="caret"></span>';
+}
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+function resetQuery() {
+  query = "";
+  renderQuery(queryText);
+}
+
+document.querySelectorAll('#keyboard .key').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const k = btn.getAttribute('data-key');
+    if (k === 'BACK') {
+      query = query.slice(0, -1);
+    } else if (k === '123') {
+      // toggle but for prototype just no-op
+      flashKey(btn);
+      return;
+    } else {
+      query += k;
+    }
+    flashKey(btn);
+    renderQuery(queryText);
+    hideCenterStack();
+  });
+});
+function flashKey(btn) {
+  btn.classList.add('pressed');
+  setTimeout(() => btn.classList.remove('pressed'), 120);
+}
+function hideCenterStack() {
+  const stack = document.getElementById('centerStack');
+  if (query.length > 0) stack.style.opacity = '.18';
+  else stack.style.opacity = '1';
+}
+
+/* Keyboard input (real keys) */
+document.addEventListener('keydown', (e) => {
+  if (current !== 'search') return;
+  if (e.key.length === 1 && /[a-zA-Z ]/.test(e.key)) {
+    query += e.key.toLowerCase();
+    renderQuery(queryText);
+    hideCenterStack();
+    const btn = document.querySelector(`#keyboard .key[data-key="${e.key.toLowerCase() === ' ' ? ' ' : e.key.toLowerCase()}"]`);
+    if (btn) flashKey(btn);
+  } else if (e.key === 'Backspace') {
+    query = query.slice(0, -1);
+    renderQuery(queryText);
+    hideCenterStack();
+  } else if (e.key === 'Enter') {
+    if (query.length > 0) submitQuery();
+  } else if (e.key === 'Escape') {
+    goHome();
+  }
+});
+
+/* =========================================================
+   Topic data & routing
+   ========================================================= */
+const topics = {
+  patriots: {
+    headline: "Here are Patriots touchdowns from yesterday's game",
+    status: "5 clips found",
+    cards: [
+      { title: "Patriots Facing Major Test This Week",     theme: "patriots-1",
+        img: "https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=400&h=600&fit=crop&auto=format" },
+      { title: "The Patriots Need Answers — Fast",         theme: "patriots-2",
+        img: "https://images.unsplash.com/photo-1495564670-5b6c87a72d8d?w=400&h=600&fit=crop&auto=format" },
+      { title: "Breaking Down the Patriots' Latest Game",  theme: "patriots-3",
+        img: "https://images.unsplash.com/photo-1607627000458-210e8d2bdb1d?w=400&h=600&fit=crop&auto=format" },
+      { title: "Can the Patriots Turn Things Around?",     theme: "patriots-4",
+        img: "https://images.unsplash.com/photo-1530549387789-4c1017266635?w=400&h=600&fit=crop&auto=format" },
+      { title: "Patriots Searching Rhythm Again",          theme: "patriots-5",
+        img: "https://images.unsplash.com/photo-1518542698283-2e6dc7f49d0d?w=400&h=600&fit=crop&auto=format" },
+    ]
+  },
+  brazil: {
+    headline: "Here are Richarlison's goals from the World Cup",
+    status: "5 clips found",
+    cards: [
+      { title: "Richarlison's Bicycle Kick Stunner",       theme: "brazil-1",
+        img: "https://images.unsplash.com/photo-1551958219-acbc608c6377?w=400&h=600&fit=crop&auto=format" },
+      { title: "Group-Stage Brace vs Serbia",              theme: "brazil-2",
+        img: "https://images.unsplash.com/photo-1517747614396-d21a78b850e8?w=400&h=600&fit=crop&auto=format" },
+      { title: "Brazil's Joga Bonito Moment",              theme: "brazil-3",
+        img: "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=400&h=600&fit=crop&auto=format" },
+      { title: "Pichichi Form in Qatar 2022",              theme: "brazil-4",
+        img: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=600&fit=crop&auto=format" },
+      { title: "Brazil's Top Scorer Highlight Reel",       theme: "brazil-5",
+        img: "https://images.unsplash.com/photo-1606925797300-0b35e9d1794e?w=400&h=600&fit=crop&auto=format" },
+    ]
+  },
+  ohtani: {
+    headline: "Here are all of Ohtani's at-bats from last night",
+    status: "5 clips found",
+    cards: [
+      { title: "Ohtani's Walk-Off Home Run",               theme: "ohtani-1",
+        img: "https://images.unsplash.com/photo-1508344928928-7165b67de128?w=400&h=600&fit=crop&auto=format" },
+      { title: "Two-Run Shot in the 5th",                  theme: "ohtani-2",
+        img: "https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=400&h=600&fit=crop&auto=format" },
+      { title: "Clutch RBI Double",                        theme: "ohtani-3",
+        img: "https://images.unsplash.com/photo-1521452538560-9d6cd0ad84cd?w=400&h=600&fit=crop&auto=format" },
+      { title: "Power Display at the Plate",               theme: "ohtani-4",
+        img: "https://images.unsplash.com/photo-1469829577589-c0042a16e2c1?w=400&h=600&fit=crop&auto=format" },
+      { title: "Final At-Bat Highlights",                  theme: "ohtani-5",
+        img: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=600&fit=crop&auto=format" },
+    ]
+  },
+  nfl: {
+    headline: "Best plays from last night's NFL games",
+    status: "12 clips found",
+    cards: [
+      { title: "Deep TD Pass Caps Comeback",               theme: "nfl-1",
+        img: "https://images.unsplash.com/photo-1566577739112-5180d4bf9390?w=400&h=600&fit=crop&auto=format" },
+      { title: "Pick-Six Changes the Game",                theme: "nfl-2",
+        img: "https://images.unsplash.com/photo-1518542698283-2e6dc7f49d0d?w=400&h=600&fit=crop&auto=format" },
+      { title: "One-Handed Catch of the Year",             theme: "nfl-3",
+        img: "https://images.unsplash.com/photo-1607627000458-210e8d2bdb1d?w=400&h=600&fit=crop&auto=format" },
+      { title: "Goal-Line Stand on 4th Down",              theme: "nfl-4",
+        img: "https://images.unsplash.com/photo-1530549387789-4c1017266635?w=400&h=600&fit=crop&auto=format" },
+      { title: "Sunday Night Game Winner",                 theme: "nfl-5",
+        img: "https://images.unsplash.com/photo-1495564670-5b6c87a72d8d?w=400&h=600&fit=crop&auto=format" },
+    ]
+  },
+  premier: {
+    headline: "Red cards in the Premier League this season",
+    status: "8 clips found",
+    cards: [
+      { title: "Two-Footed Tackle vs Arsenal",             theme: "premier-1",
+        img: "https://images.unsplash.com/photo-1551958219-acbc608c6377?w=400&h=600&fit=crop&auto=format" },
+      { title: "Last-Man Foul Outside the Box",            theme: "premier-2",
+        img: "https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=400&h=600&fit=crop&auto=format" },
+      { title: "Second Yellow in Derby Day Drama",         theme: "premier-3",
+        img: "https://images.unsplash.com/photo-1517747614396-d21a78b850e8?w=400&h=600&fit=crop&auto=format" },
+      { title: "VAR Overturns Caution to Red",             theme: "premier-4",
+        img: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=400&h=600&fit=crop&auto=format" },
+      { title: "Stoppage-Time Dismissal",                  theme: "premier-5",
+        img: "https://images.unsplash.com/photo-1577741314755-048d8525d31e?w=400&h=600&fit=crop&auto=format" },
+    ]
+  }
+};
+
+function pickTopic(q) {
+  q = (q || '').toLowerCase();
+  if (q.includes('patriot') || q.includes('touchdown'))            return 'patriots';
+  if (q.includes('ohtani') || q.includes('at-bat') || q.includes('at bat')) return 'ohtani';
+  if (q.includes('richarlison') || q.includes('brazil') || q.includes('world cup')) return 'brazil';
+  if (q.includes('red card') || q.includes('premier'))             return 'premier';
+  if (q.includes('nfl') || q.includes('football'))                 return 'nfl';
+  return 'patriots'; // sensible default
+}
+
+function renderResults(topicKey) {
+  const topic = topics[topicKey] || topics.patriots;
+  document.getElementById('resultsHeadline').textContent = topic.headline;
+  document.getElementById('resultStatusText').textContent = topic.status;
+  const container = document.getElementById('resultsCards');
+  container.innerHTML = '';
+  topic.cards.forEach((card, i) => {
+    const div = document.createElement('div');
+    div.className = 'result-card theme-' + card.theme + (i === 0 ? ' focused' : '');
+    div.innerHTML =
+      '<div class="card-photo" style="background-image:url(\'' + card.img + '\')"></div>' +
+      '<div class="gradient-overlay"></div>' +
+      '<div class="card-label">' + escapeHtml(card.title) + '</div>';
+    container.appendChild(div);
+  });
+  resetFeedback();
+}
+
+function resetFeedback() {
+  document.getElementById('thumbUp').classList.remove('rated-up');
+  document.getElementById('thumbDown').classList.remove('rated-down');
+  document.getElementById('feedbackThanks').classList.remove('show');
+}
+
+function rateFeedback(direction) {
+  resetFeedback();
+  const target = document.getElementById(direction === 'up' ? 'thumbUp' : 'thumbDown');
+  target.classList.add(direction === 'up' ? 'rated-up' : 'rated-down');
+  document.getElementById('feedbackThanks').classList.add('show');
+}
+
+/* =========================================================
+   Suggestions
+   ========================================================= */
+function useSuggestion(el) {
+  const text = el.textContent;
+  query = text.toLowerCase();
+  renderQuery(queryText);
+  hideCenterStack();
+  setTimeout(() => submitQuery(text), 300);
+}
+
+/* =========================================================
+   Submit query -> thinking -> results
+   ========================================================= */
+function submitQuery(textOverride) {
+  const q = (textOverride !== undefined ? textOverride : query) || '';
+  const topicKey = pickTopic(q);
+  show('thinking');
+  setTimeout(() => {
+    renderResults(topicKey);
+    show('results');
+  }, 2400);
+}
+
+/* =========================================================
+   Mic dictation flow
+   ========================================================= */
+const micTrigger   = document.getElementById('micTrigger');
+const dictateText  = document.getElementById('dictateText');
+const micStage     = document.getElementById('micStage');
+const micButton    = document.getElementById('micButton');
+
+const DICTATION_QUERY = "Give me all Richarlison's goals from the World Cup";
+let dictateInterval = null;
+let dictateIndex = 0;
+let dictateStarted = 0;
+let aborted = false;
+
+/* --- Real Web Speech API integration with simulation fallback --- */
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let usingRealMic = false;
+let realTranscript = '';
+
+function startDictation() {
+  aborted = false;
+  dictateIndex = 0;
+  realTranscript = '';
+  usingRealMic = false;
+  dictateText.innerHTML = '<span class="caret"></span>';
+  show('dictate');
+  micStage.classList.add('listening');
+  dictateStarted = Date.now();
+
+  // Try the real microphone first
+  if (SpeechRecognition && location.protocol !== 'file:') {
+    try {
+      recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = (e) => {
+        let finalT = '', interimT = '';
+        for (let i = 0; i < e.results.length; i++) {
+          const t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) finalT += t;
+          else interimT += t;
+        }
+        realTranscript = (finalT + interimT).trim();
+        if (realTranscript.length > 0) {
+          dictateText.innerHTML = escapeHtml(realTranscript) + '<span class="caret"></span>';
+        }
+      };
+
+      recognition.onerror = (e) => {
+        console.warn('SpeechRecognition error:', e.error);
+        // not-allowed / service-not-allowed / network → fall back to sim
+        if (['not-allowed', 'service-not-allowed', 'network', 'audio-capture'].includes(e.error)) {
+          showHint('Mic unavailable — using simulated demo');
+          recognition = null;
+          usingRealMic = false;
+          if (!aborted && current === 'dictate') runSimulatedDictation();
+        }
+      };
+
+      recognition.onend = () => {
+        // Natural end (user released); endDictation handles routing
+      };
+
+      recognition.start();
+      usingRealMic = true;
+      showHint('🎙 Listening… speak now, release to search');
+      return; // skip simulation
+    } catch (err) {
+      console.warn('SpeechRecognition init failed:', err);
+      recognition = null;
+      usingRealMic = false;
+    }
+  } else if (location.protocol === 'file:') {
+    showHint('Open over http(s) for real mic — using demo dictation');
+  }
+
+  // Fallback: simulated typing of the canned query
+  runSimulatedDictation();
+}
+
+function runSimulatedDictation() {
+  dictateInterval = setInterval(() => {
+    if (aborted) return;
+    dictateIndex++;
+    const partial = DICTATION_QUERY.slice(0, dictateIndex);
+    dictateText.innerHTML = escapeHtml(partial) + '<span class="caret"></span>';
+    if (dictateIndex >= DICTATION_QUERY.length) {
+      clearInterval(dictateInterval);
+      dictateInterval = null;
+    }
+  }, 60);
+}
+
+function endDictation(cancel = false) {
+  if (dictateInterval) clearInterval(dictateInterval);
+  micStage.classList.remove('listening');
+
+  // Real-mic path
+  if (usingRealMic && recognition) {
+    try { recognition.stop(); } catch (e) {}
+    const captured = realTranscript;
+    recognition = null;
+    usingRealMic = false;
+    if (cancel || !captured) {
+      aborted = true;
+      show('search');
+      return;
+    }
+    query = captured;
+    renderQuery(queryText);
+    submitQuery(captured);
+    return;
+  }
+
+  // Simulated path
+  if (cancel) {
+    aborted = true;
+    show('search');
+    return;
+  }
+  query = DICTATION_QUERY;
+  renderQuery(queryText);
+  submitQuery(DICTATION_QUERY);
+}
+
+// Hold-to-dictate on the search top mic
+let isHolding = false;
+function holdStart(e) {
+  if (current !== 'search') return;
+  e.preventDefault();
+  isHolding = true;
+  startDictation();
+}
+function holdEnd(e) {
+  if (!isHolding) return;
+  isHolding = false;
+
+  // Real mic: just stop and route whatever was captured
+  if (usingRealMic) {
+    endDictation(false);
+    return;
+  }
+
+  // Simulated: accelerate typing to finish, then advance
+  const remaining = DICTATION_QUERY.length - dictateIndex;
+  if (remaining > 0) {
+    if (dictateInterval) clearInterval(dictateInterval);
+    const fast = setInterval(() => {
+      dictateIndex++;
+      const partial = DICTATION_QUERY.slice(0, dictateIndex);
+      dictateText.innerHTML = escapeHtml(partial) + '<span class="caret"></span>';
+      if (dictateIndex >= DICTATION_QUERY.length) {
+        clearInterval(fast);
+        setTimeout(() => endDictation(false), 350);
+      }
+    }, 22);
+  } else {
+    endDictation(false);
+  }
+}
+
+micTrigger.addEventListener('mousedown', holdStart);
+micTrigger.addEventListener('touchstart', holdStart, {passive:false});
+window.addEventListener('mouseup', holdEnd);
+window.addEventListener('touchend', holdEnd);
+
+// Click the big mic button in dictation to finish early
+micButton.addEventListener('click', (e) => {
+  e.stopPropagation();
+  if (current !== 'dictate') return;
+  if (usingRealMic) {
+    endDictation(false);
+    return;
+  }
+  // Simulated: skip to end
+  if (dictateInterval) clearInterval(dictateInterval);
+  dictateIndex = DICTATION_QUERY.length;
+  dictateText.innerHTML = escapeHtml(DICTATION_QUERY) + '<span class="caret"></span>';
+  setTimeout(() => endDictation(false), 200);
+});
+
+/* =========================================================
+   Hint toast
+   ========================================================= */
+const hintEl = document.getElementById('hint');
+function showHint(msg) {
+  hintEl.textContent = msg;
+  hintEl.classList.add('show');
+  clearTimeout(showHint._t);
+  showHint._t = setTimeout(() => hintEl.classList.remove('show'), 3500);
+}
+
+// First-time hint
+setTimeout(() => {
+  showHint('Click the glowing "Ask Fubo" chip to start →');
+}, 700);
+</script>
+</body>
+</html>
