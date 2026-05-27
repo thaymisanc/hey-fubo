@@ -25,7 +25,7 @@ Best viewed full-screen on desktop (designed for 16:9 TV-style layouts). Works i
 - The **on-screen alphabet keyboard** is fully functional. Typing letters builds the search query character-by-character. Pressing Enter on a physical keyboard submits.
 - **Real microphone** works if the participant is in Chrome / Edge / Brave on the hosted https URL. Holding the "Hold to dictate" button starts a live Web Speech API session and transcribes their voice into the query bar. Releasing the button submits. (If permission is denied, the unsupported browser, or local `file://`, it silently falls back to a scripted demo phrase.)
 - **All four suggestion chips** are tappable and route to dedicated topic-specific result screens (Ohtani, Patriots, Knicks, Brazil).
-- **Typed queries via keyboard always route to the generic mixed-results screen** (the stacked placeholder cards). This is intentional — we want to observe how participants react when the system can't pre-cache a specific answer.
+- **Typed queries via keyboard always route to the generic mixed-results screen** (the stacked placeholder cards). 
 - The first card on each result screen has a small white focus outline (TV remote pattern).
 - The results screen has thumbs-up / thumbs-down feedback affordances that respond on click.
 - The Close button (top-right) on the results/thinking screens returns to the home page.
