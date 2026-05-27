@@ -4,7 +4,7 @@ A clickable, browser-based prototype of an "Ask Fubo" voice + text search experi
 
 **Live demo:** https://thaymisanc.github.io/hey-fubo/
 
-Best viewed full-screen on desktop (designed for 16:9 TV-style layouts). Works in Chrome, Edge, and Brave. Safari and Firefox work for everything except the real-microphone voice flow — see "Notes for facilitators" below.
+Best viewed full-screen on desktop (designed for 16:9 TV-style layouts). Works in Chrome, Edge, and Brave. Safari and Firefox work for everything except the real-microphone voice flow.
 
 ---
 
