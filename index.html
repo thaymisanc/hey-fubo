@@ -317,10 +317,16 @@
     position: relative;
     width: 100%;
     aspect-ratio: 16 / 9;
-    background: #222;
+    background: #161822;
     border-radius: 12px;
     overflow: hidden;
     display: flex; align-items: center; justify-content: center;
+  }
+  .card-img > img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
   }
   .card-time {
     position: absolute;
@@ -646,8 +652,8 @@
     border: 1px solid rgba(255,255,255,.5);
     color: rgba(255,255,255,.95);
     border-radius: 999px;
-    padding: 1.4vh 1.9vw;
-    font-size: clamp(15px, 1.25vw, 22px);
+    padding: 1.15vh 1.5vw;
+    font-size: clamp(13px, 1.05vw, 18px);
     font-weight: 500;
     white-space: nowrap;
     transition: all .2s ease;
@@ -906,13 +912,15 @@
     position: absolute; inset: 0;
     overflow: hidden;
   }
-  .result-card .card-photo img {
+  .result-card .card-photo img,
+  .result-card .card-photo video {
     width: 100%; height: 100%;
     object-fit: cover;
     display: block;
     transition: transform .4s ease;
   }
-  .result-card:hover .card-photo img {
+  .result-card:hover .card-photo img,
+  .result-card:hover .card-photo video {
     transform: scale(1.05);
   }
 
@@ -924,6 +932,48 @@
   .result-card.card-empty .gradient-overlay,
   .result-card.card-empty .card-label {
     display: none;
+  }
+
+  /* Generic stack-style card — used for mic / non-specific queries.
+     Looks like a placeholder card with a faint stack of cards behind it. */
+  .result-card.stack-card {
+    background: linear-gradient(180deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,.07) 100%);
+    overflow: visible;
+  }
+  .result-card.stack-card::before,
+  .result-card.stack-card::after {
+    content: "";
+    position: absolute;
+    height: 18px;
+    border-radius: 14px 14px 0 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+  .result-card.stack-card::before {
+    top: -8px;
+    left: 14px; right: 14px;
+    background: rgba(255,255,255,.22);
+  }
+  .result-card.stack-card::after {
+    top: -16px;
+    left: 28px; right: 28px;
+    background: rgba(255,255,255,.13);
+  }
+  .result-card.stack-card .card-badge {
+    position: absolute;
+    top: 1.2vh; left: .85vw;
+    background: rgba(20,20,28,.85);
+    color: #fff;
+    padding: .5vh .9vw;
+    border-radius: 999px;
+    font-size: clamp(12px, .95vw, 15px);
+    font-weight: 600;
+    z-index: 2;
+    white-space: nowrap;
+  }
+  .result-card.stack-card .card-label {
+    /* Stack cards have no photo so the label sits flat against the fill */
+    text-shadow: none;
   }
   .result-card .gradient-overlay {
     position: absolute; inset: 0;
@@ -1067,37 +1117,29 @@
         <h2 class="rail-title">Popular sports</h2>
         <div class="rail-row">
           <div class="card" onclick="goToSearch()">
-            <div class="card-img bg-usopen">
+            <div class="card-img"><img src="./img/pop-1-usopen.png" alt="">
               <span class="card-time">3:30pm</span>
             </div>
             <div class="card-title">Men's Women's First Round</div>
             <div class="card-sub">US Open Tennis</div>
           </div>
           <div class="card" onclick="goToSearch()">
-            <div class="card-img bg-wisla">
-              <span class="card-time">3:30pm</span>
-            </div>
+            <div class="card-img"><img src="./img/pop-2-wisla.png" alt=""></div>
             <div class="card-title">Wisla Plock vs Zaglebie Lu…</div>
             <div class="card-sub">Ekstraklasa Soccer</div>
           </div>
           <div class="card" onclick="goToSearch()">
-            <div class="card-img bg-billiards">
-              <span class="card-time">3:30pm</span>
-            </div>
+            <div class="card-img"><img src="./img/pop-3-billiards.png" alt=""></div>
             <div class="card-title">2025 Women's Profession…</div>
             <div class="card-sub">Billiards</div>
           </div>
           <div class="card" onclick="goToSearch()">
-            <div class="card-img bg-newcastle">
-              <span class="card-time">3:30pm</span>
-            </div>
+            <div class="card-img"><img src="./img/pop-4-newcastle.png" alt=""></div>
             <div class="card-title">Newcastle United FC vs Li…</div>
             <div class="card-sub">English Premier League</div>
           </div>
           <div class="card" onclick="goToSearch()">
-            <div class="card-img bg-kansas">
-              <span class="card-time">3:30pm</span>
-            </div>
+            <div class="card-img"><img src="./img/pop-5-kansas.png" alt=""></div>
             <div class="card-title">Kansas at…</div>
             <div class="card-sub">Women's College</div>
           </div>
@@ -1107,35 +1149,20 @@
       <div class="rail">
         <h2 class="rail-title">Sports roundup</h2>
         <div class="rail-row">
-          <div class="card news-card" onclick="goToSearch()">
-            <div class="card-img bg-dbacks">
-              <span class="card-tag">MLB News</span>
-              <div class="card-title">Mets @ Dbacks Preview</div>
-            </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img"><img src="./img/roundup-1.png" alt=""></div>
           </div>
-          <div class="card news-card" onclick="goToSearch()">
-            <div class="card-img bg-tigers">
-              <span class="card-tag">MLB News</span>
-              <div class="card-title">Tigers vs Rangers Highlights</div>
-            </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img"><img src="./img/roundup-2.png" alt=""></div>
           </div>
-          <div class="card news-card" onclick="goToSearch()">
-            <div class="card-img bg-astros">
-              <span class="card-tag">MLB News</span>
-              <div class="card-title">Astros vs Reds Highlights</div>
-            </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img"><img src="./img/roundup-3.png" alt=""></div>
           </div>
-          <div class="card news-card" onclick="goToSearch()">
-            <div class="card-img bg-vegas">
-              <span class="card-tag">NHL News</span>
-              <div class="card-title">Skinner Highlights</div>
-            </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img"><img src="./img/roundup-4.png" alt=""></div>
           </div>
-          <div class="card news-card" onclick="goToSearch()">
-            <div class="card-img bg-illinois">
-              <span class="card-tag">NCAAFB News</span>
-              <div class="card-title">Illinois Football Analysis</div>
-            </div>
+          <div class="card" onclick="goToSearch()">
+            <div class="card-img"><img src="./img/roundup-5-v2.png" alt=""></div>
           </div>
         </div>
       </div>
@@ -1144,19 +1171,13 @@
         <h2 class="rail-title">Where you left off</h2>
         <div class="rail-row">
           <div class="card" onclick="goToSearch()">
-            <div class="card-img" style="background:linear-gradient(135deg,#1d4d9e 0%,#0a2d65 100%);">
-              <span class="card-time">2:15pm</span>
-            </div>
+            <div class="card-img"><img src="./img/wyl-1.png" alt=""></div>
           </div>
           <div class="card" onclick="goToSearch()">
-            <div class="card-img" style="background:linear-gradient(135deg,#c8102e 0%,#7a0a1f 100%);">
-              <span class="card-time">1:45pm</span>
-            </div>
+            <div class="card-img" style="background:linear-gradient(135deg,#c8102e 0%,#7a0a1f 100%);"></div>
           </div>
           <div class="card" onclick="goToSearch()">
-            <div class="card-img" style="background:linear-gradient(135deg,#3e2723 0%,#1a0e0a 100%);">
-              <span class="card-time">11:30am</span>
-            </div>
+            <div class="card-img" style="background:linear-gradient(135deg,#3e2723 0%,#1a0e0a 100%);"></div>
           </div>
         </div>
       </div>
@@ -1228,6 +1249,7 @@
 
     <div class="suggestions">
       <button class="suggestion" onclick="useSuggestion(this)">All Ohtani at-bats last night</button>
+      <button class="suggestion" onclick="useSuggestion(this)">Patriots touchdowns from yesterday's game</button>
       <button class="suggestion" onclick="useSuggestion(this)">Knicks scores from last week</button>
       <button class="suggestion" onclick="useSuggestion(this)">Brazil goals from World Cup</button>
     </div>
@@ -1461,7 +1483,9 @@ document.addEventListener('keydown', (e) => {
     renderQuery(queryText);
     hideCenterStack();
   } else if (e.key === 'Enter') {
-    if (query.length > 0) submitQuery();
+    /* Typed keyboard input always shows generic results — suggestion chips
+       are the only path to topic-specific results screens. */
+    if (query.length > 0) submitQuery(query, 'generic');
   } else if (e.key === 'Escape') {
     goHome();
   }
@@ -1476,7 +1500,7 @@ const topics = {
   patriots: {
     headline: "Here are Patriots touchdowns from yesterday's game",
     cards: [
-      { title: "Patriots Facing Major Test This Week",     img: "./img/patriots-1.png" },
+      { title: "Patriots Facing Major Test This Week",     video: "./img/patriots-1.mp4", poster: "./img/patriots-1.png" },
       { title: "The Patriots Need Answers — Fast",         img: "./img/patriots-2.png" },
       { title: "Breaking Down the Patriots' Latest Game",  img: "./img/patriots-3.png" },
       { title: "Can the Patriots Turn Things Around?",     img: "./img/patriots-4.png" },
@@ -1486,7 +1510,7 @@ const topics = {
   brazil: {
     headline: "Here are Brazil's goals from the World Cup",
     cards: [
-      { title: "Richarlison's Bicycle Kick Stunner",       img: "./img/brazil-1.png" },
+      { title: "Richarlison's Bicycle Kick Stunner",       video: "./img/brazil-1.mp4", poster: "./img/brazil-1.png" },
       { title: "Group-Stage Brace vs Serbia",              img: "./img/brazil-2.png" },
       { title: "Vini Jr's Trademark Finish",               img: "./img/brazil-3.png" },
       { title: "Brazil's Joga Bonito Moment",              img: "./img/brazil-4.webp" },
@@ -1496,7 +1520,7 @@ const topics = {
   ohtani: {
     headline: "Here are all of Ohtani's at-bats from last night",
     cards: [
-      { title: "Ohtani's Walk-Off Home Run",               img: "./img/ohtani-1.jpg" },
+      { title: "Ohtani's Walk-Off Home Run",               video: "./img/ohtani-1.mp4", poster: "./img/ohtani-1.jpg" },
       { title: "Two-Run Shot in the 5th",                  img: "./img/ohtani-2.jpg" },
       { title: "Clutch RBI Double",                        img: "./img/ohtani-3.webp" },
       { title: "Power Display at the Plate",               img: "./img/ohtani-4.jpg" },
@@ -1506,11 +1530,24 @@ const topics = {
   knicks: {
     headline: "Here are the Knicks scores from last week",
     cards: [
-      { title: "Knicks Clutch Win Over Rivals",            img: "./img/knicks-1.webp" },
+      { title: "Knicks Clutch Win Over Rivals",            video: "./img/knicks-1.mp4", poster: "./img/knicks-1.webp" },
       { title: "Towns Career Night at MSG",                img: "./img/knicks-2.avif" },
       { title: "Brunson Drops 40 in OT",                   img: "./img/knicks-3.avif" },
       { title: "Bridges Sparks the Comeback",              img: "./img/knicks-4.jpg" },
       { title: "Knicks Dominate at the Garden",            img: "./img/knicks-5.jpg" },
+    ]
+  },
+  /* Generic results for mic / non-routable voice queries.
+     Cards are stack-style placeholders since we don't know yet what to fetch. */
+  generic: {
+    headline: "These results would be short clips based on your question",
+    statusLabel: "This is it",
+    cards: [
+      { title: "9 goals of the latest World Cup Soccer Game", badge: "5 clips",  style: "stack" },
+      { title: "Video of the winning touchdown in NFL",        badge: "1:54",    style: "stack" },
+      { title: "Breaking Down the Knicks Latest Game",         badge: "5 clips", style: "stack" },
+      { title: "Can the Patriots Turn Things Around?",         badge: "10 clips", style: "stack" },
+      { title: "Patriots Searching Rhythm Again",              badge: "2 clips", style: "stack" },
     ]
   }
 };
@@ -1526,28 +1563,57 @@ function pickTopic(q) {
 
 function renderResults(topicKey) {
   const topic = topics[topicKey] || topics.patriots;
-  const realCount = topic.cards.filter(c => c.img).length;
   document.getElementById('resultsHeadline').textContent = topic.headline;
-  document.getElementById('resultStatusText').textContent =
-    realCount + ' clip' + (realCount === 1 ? '' : 's') + ' found';
+
+  if (topic.statusLabel) {
+    // Generic results use a custom label like "This is it" instead of a count
+    document.getElementById('resultStatusText').textContent = topic.statusLabel;
+  } else {
+    const realCount = topic.cards.filter(c => c.video || c.img).length;
+    document.getElementById('resultStatusText').textContent =
+      realCount + ' clip' + (realCount === 1 ? '' : 's') + ' found';
+  }
 
   const container = document.getElementById('resultsCards');
   container.innerHTML = '';
 
+  // Index of the first focusable card (first stack, image, or video)
+  const firstFocusable = topic.cards.findIndex(c => c.video || c.img || c.style === 'stack');
+
   topic.cards.forEach((card, i) => {
     const div = document.createElement('div');
-    const isEmpty = !card.img;
-    const isFocused = !isEmpty && i === topic.cards.findIndex(c => c.img); // focus first real card
-    div.className = 'result-card' + (isEmpty ? ' card-empty' : '') + (isFocused ? ' focused' : '');
+    const isStack = card.style === 'stack';
+    const hasMedia = !!(card.video || card.img);
+    const isEmpty = !isStack && !hasMedia;
+    const isFocused = !isEmpty && i === firstFocusable;
 
-    if (!isEmpty) {
-      // Use <img> with onerror so failed loads degrade to the white empty state
+    div.className = 'result-card'
+      + (isStack ? ' stack-card' : '')
+      + (isEmpty ? ' card-empty' : '')
+      + (isFocused ? ' focused' : '');
+
+    if (isStack) {
+      div.innerHTML =
+        (card.badge ? '<span class="card-badge">' + escapeHtml(card.badge) + '</span>' : '') +
+        '<div class="card-label">' + escapeHtml(card.title) + '</div>';
+    } else if (!isEmpty) {
       const onErr =
         "this.parentNode.parentNode.classList.add('card-empty');" +
         "this.parentNode.parentNode.classList.remove('focused');" +
         "this.remove();";
+      let media;
+      if (card.video) {
+        const posterAttr = card.poster ? ' poster="' + card.poster + '"' : '';
+        media =
+          '<video src="' + card.video + '"' + posterAttr +
+          ' autoplay loop muted playsinline preload="metadata"' +
+          ' onerror="' + onErr + '"></video>';
+      } else {
+        media =
+          '<img src="' + card.img + '" alt="" loading="lazy" onerror="' + onErr + '">';
+      }
       div.innerHTML =
-        '<div class="card-photo"><img src="' + card.img + '" alt="" loading="lazy" onerror="' + onErr + '"></div>' +
+        '<div class="card-photo">' + media + '</div>' +
         '<div class="gradient-overlay"></div>' +
         '<div class="card-label">' + escapeHtml(card.title) + '</div>';
     }
@@ -1583,9 +1649,9 @@ function useSuggestion(el) {
 /* =========================================================
    Submit query -> thinking -> results
    ========================================================= */
-function submitQuery(textOverride) {
+function submitQuery(textOverride, topicOverride) {
   const q = (textOverride !== undefined ? textOverride : query) || '';
-  const topicKey = pickTopic(q);
+  const topicKey = topicOverride || pickTopic(q);
   show('thinking');
   setTimeout(() => {
     renderResults(topicKey);
@@ -1689,7 +1755,7 @@ function endDictation(cancel = false) {
   if (dictateInterval) clearInterval(dictateInterval);
   micStage.classList.remove('listening');
 
-  // Real-mic path
+  // Real-mic path — voice queries always show generic mixed results
   if (usingRealMic && recognition) {
     try { recognition.stop(); } catch (e) {}
     const captured = realTranscript;
@@ -1702,11 +1768,11 @@ function endDictation(cancel = false) {
     }
     query = captured;
     renderQuery(queryText);
-    submitQuery(captured);
+    submitQuery(captured, 'generic');
     return;
   }
 
-  // Simulated path
+  // Simulated mic path — also routes to generic
   if (cancel) {
     aborted = true;
     show('search');
@@ -1714,7 +1780,7 @@ function endDictation(cancel = false) {
   }
   query = DICTATION_QUERY;
   renderQuery(queryText);
-  submitQuery(DICTATION_QUERY);
+  submitQuery(DICTATION_QUERY, 'generic');
 }
 
 // Hold-to-dictate on the search top mic
